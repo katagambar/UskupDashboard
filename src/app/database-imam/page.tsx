@@ -1,25 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { 
-  Users, 
-  ExternalLink, 
-  Search, 
-  Church, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import {
+  Users,
+  ExternalLink,
+  Search,
+  Church,
+  Phone,
+  Mail,
   Calendar,
   UserCheck,
   BookOpen,
-  Heart
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  Info
 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface Imam {
   id: string
@@ -28,66 +31,57 @@ interface Imam {
   jabatan: string
   status: string
   tanggalTahbisan: string
-  nomorTelepon: string
-  email: string
-  alamat: string
+  nomorTelepon: string | null
+  email: string | null
 }
 
-const sampleImam: Imam[] = [
-  {
-    id: "1",
-    nama: "RD. Antonius Sutrisno",
-    paroki: "Paroki Santo Paulus",
-    jabatan: "Pastor Paroki",
-    status: "Aktif",
-    tanggalTahbisan: "2010-06-15",
-    nomorTelepon: "0812-3456-7890",
-    email: "antonius.sutrisno@stpaulus.sby",
-    alamat: "Jl. Santo Paulus No. 10, Surabaya"
-  },
-  {
-    id: "2",
-    nama: "RD. Michael Wijaya",
-    paroki: "Paroki Santa Maria",
-    jabatan: "Vikaris",
-    status: "Aktif",
-    tanggalTahbisan: "2015-12-20",
-    nomorTelepon: "0813-2345-6789",
-    email: "michael.wijaya@santa.maria.sby",
-    alamat: "Jl. Santa Maria No. 25, Surabaya"
-  },
-  {
-    id: "3",
-    nama: "RD. Franciscus Xaverius",
-    paroki: "Paroki Santo Petrus",
-    jabatan: "Pastor Paroki",
-    status: "Aktif",
-    tanggalTahbisan: "2008-03-10",
-    nomorTelepon: "0811-3456-7890",
-    email: "franciscus.x@stpetrus.sby",
-    alamat: "Jl. Santo Petrus No. 5, Surabaya"
-  },
-  {
-    id: "4",
-    nama: "RD. Yohanes Baptista",
-    paroki: "Paroki Santo Yoseph",
-    jabatan: "Pastor Rekan",
-    status: "Cuti",
-    tanggalTahbisan: "2012-09-05",
-    nomorTelepon: "0814-5678-9012",
-    email: "yohanes.b@stjoseph.sby",
-    alamat: "Jl. Santo Yoseph No. 15, Surabaya"
-  }
-]
-
 export default function DatabaseImamPage() {
+  const [imamList, setImamList] = useState<Imam[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("semua")
+  const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
-  const filteredImam = sampleImam.filter(item => {
+  // Fetch imam data from local cache (synced from external API)
+  useEffect(() => {
+    fetchImamData()
+  }, [])
+
+  const fetchImamData = async () => {
+    try {
+      setIsLoading(true)
+      setSyncError(null)
+      const response = await fetch('/api/imam', { credentials: 'include' })
+      const result = await response.json()
+      if (result.success) {
+        setImamList(result.data || [])
+        setLastSync(new Date())
+      } else {
+        setSyncError('Gagal memuat data dari cache lokal')
+      }
+    } catch (error) {
+      console.error('Failed to fetch imam:', error)
+      setSyncError('Gagal terhubung ke server')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Refresh/sync data from external API
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    // In the future, this would trigger sync from external Pororomo API
+    await fetchImamData()
+    setIsRefreshing(false)
+  }
+
+  // Filter imam
+  const filteredImam = imamList.filter(item => {
     const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.paroki.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.jabatan.toLowerCase().includes(searchTerm.toLowerCase())
+      item.paroki.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.jabatan.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === "semua" || item.status === filterStatus
     return matchesSearch && matchesStatus
   })
@@ -106,10 +100,10 @@ export default function DatabaseImamPage() {
   }
 
   const stats = {
-    total: sampleImam.length,
-    aktif: sampleImam.filter(i => i.status === "Aktif").length,
-    cuti: sampleImam.filter(i => i.status === "Cuti").length,
-    pensiun: sampleImam.filter(i => i.status === "Pensiun").length
+    total: imamList.length,
+    aktif: imamList.filter(i => i.status === "Aktif").length,
+    cuti: imamList.filter(i => i.status === "Cuti").length,
+    pensiun: imamList.filter(i => i.status === "Pensiun").length
   }
 
   return (
@@ -119,41 +113,54 @@ export default function DatabaseImamPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Database Imam</h1>
             <p className="text-muted-foreground">
-              Akses database para imam Keuskupan Surabaya
+              Data imam tersinkronisasi dari sistem Pororomo
             </p>
           </div>
-          <Button 
-            onClick={() => window.open("https://pororomo.komunio.org/admin/login", "_blank")}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Buka Database Pororomo
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Sinkronkan
+            </Button>
+            <Button
+              onClick={() => window.open("https://pororomo.komunio.org/admin/login", "_blank")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Kelola di Pororomo
+            </Button>
+          </div>
         </div>
 
-        {/* Info Card */}
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-blue-900">Database Pororomo</h3>
-                <p className="text-blue-700 mt-1">
-                  Database lengkap para imam Keuskupan Surabaya tersedia dalam sistem Pororomo. 
-                  Klik tombol di atas untuk mengakses database resmi dengan data yang lebih lengkap dan terupdate.
-                </p>
-                <div className="mt-4 flex items-center gap-4 text-sm text-blue-600">
-                  <div className="flex items-center gap-1">
-                    <ExternalLink className="h-4 w-4" />
-                    <span>https://pororomo.komunio.org/admin/login</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Info Alert */}
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Sumber Data Eksternal</AlertTitle>
+          <AlertDescription>
+            Data imam disinkronisasi dari <strong>Database Pororomo</strong>.
+            Untuk menambah, mengubah, atau menghapus data imam, silakan akses sistem Pororomo secara langsung.
+            {lastSync && (
+              <span className="block mt-1 text-sm text-muted-foreground">
+                Terakhir sinkronisasi: {lastSync.toLocaleString('id-ID')}
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+
+        {syncError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{syncError}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -211,10 +218,11 @@ export default function DatabaseImamPage() {
                   className="pl-8"
                 />
               </div>
-              <select 
+              <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-3 py-2 border border-input bg-background rounded-md text-sm"
+                aria-label="Filter Status"
               >
                 <option value="semua">Semua Status</option>
                 <option value="Aktif">Aktif</option>
@@ -228,113 +236,147 @@ export default function DatabaseImamPage() {
         {/* Imam Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Data Imam (Preview)</CardTitle>
+            <CardTitle>Data Imam</CardTitle>
             <CardDescription>
-              Data preview. Untuk data lengkap, akses database Pororomo
+              Data tersinkronisasi dari Database Pororomo (read-only)
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Paroki</TableHead>
-                  <TableHead>Jabatan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tanggal Tahbisan</TableHead>
-                  <TableHead>Kontak</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredImam.map((imam) => (
-                  <TableRow key={imam.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        {imam.nama}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Church className="h-4 w-4 text-muted-foreground" />
-                        {imam.paroki}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{imam.jabatan}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(imam.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {new Date(imam.tanggalTahbisan).toLocaleDateString('id-ID')}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-sm">
-                          <Phone className="h-3 w-3 text-muted-foreground" />
-                          {imam.nomorTelepon}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
-                          {imam.email}
-                        </div>
-                      </div>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Memuat data...</span>
+              </div>
+            ) : filteredImam.length === 0 ? (
+              <div className="text-center py-12">
+                {imamList.length === 0 ? (
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center justify-center p-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                      <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Data Imam Belum Tersinkron</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto mt-2">
+                        Data imam akan diambil dari sistem Pororomo. Konfigurasi koneksi API di halaman Pengaturan untuk memulai sinkronisasi.
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <Button variant="outline" onClick={() => window.location.href = '/settings?tab=sync'}>
+                        Konfigurasi Sinkronisasi
+                      </Button>
+                      <Button onClick={handleRefresh} disabled={isRefreshing}>
+                        {isRefreshing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                        )}
+                        Coba Sinkronkan
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground">
+                    Tidak ada data yang cocok dengan filter pencarian.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nama</TableHead>
+                    <TableHead>Paroki</TableHead>
+                    <TableHead>Jabatan</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Tahbisan</TableHead>
+                    <TableHead>Kontak</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredImam.map((imam) => (
+                    <TableRow key={imam.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          {imam.nama}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Church className="h-4 w-4 text-muted-foreground" />
+                          {imam.paroki}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{imam.jabatan}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(imam.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          {new Date(imam.tanggalTahbisan).toLocaleDateString('id-ID')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {imam.nomorTelepon && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              {imam.nomorTelepon}
+                            </div>
+                          )}
+                          {imam.email && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              {imam.email}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
-        {/* Quick Access */}
+        {/* Quick Access Links */}
         <Card>
           <CardHeader>
-            <CardTitle>Akses Cepat</CardTitle>
+            <CardTitle>Akses Sistem Pororomo</CardTitle>
             <CardDescription>
-              Link penting terkait database imam
+              Kelola data imam melalui sistem resmi
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                   onClick={() => window.open("https://pororomo.komunio.org/admin/login", "_blank")}>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div
+                className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => window.open("https://pororomo.komunio.org/admin/login", "_blank")}
+              >
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Database Pororomo
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Akses database resli imam
-                  </p>
+                  <p className="text-sm font-medium leading-none">Database Imam</p>
+                  <p className="text-sm text-muted-foreground">Kelola data imam</p>
                 </div>
                 <ExternalLink className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-                <Heart className="h-8 w-8 text-red-600" />
+                <Church className="h-8 w-8 text-purple-600" />
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Data Vokasi
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Informasi calon imam
-                  </p>
+                  <p className="text-sm font-medium leading-none">Data Paroki</p>
+                  <p className="text-sm text-muted-foreground">Informasi paroki</p>
                 </div>
                 <ExternalLink className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="flex items-center space-x-4 rounded-md border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
                 <BookOpen className="h-8 w-8 text-green-600" />
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Formasi
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Program formasi imam
-                  </p>
+                  <p className="text-sm font-medium leading-none">Laporan</p>
+                  <p className="text-sm text-muted-foreground">Statistik dan laporan</p>
                 </div>
                 <ExternalLink className="h-4 w-4 text-muted-foreground" />
               </div>

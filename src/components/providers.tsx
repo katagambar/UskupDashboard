@@ -1,6 +1,9 @@
 "use client"
 
+import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
+import { QueryProvider } from "@/lib/query-client"
+import { NavigationProgress } from "@/components/navigation-progress"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -8,13 +11,18 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
+        {children}
+      </ThemeProvider>
+    </QueryProvider>
   )
 }

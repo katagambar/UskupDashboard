@@ -14,7 +14,10 @@ export function useCurrentUser() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  const checkAuth = async () => {
+  const checkAuth = async (retryCount = 0) => {
+    const maxRetries = 3
+    const retryDelay = 1000 // 1 second
+
     try {
       setIsLoading(true)
       const response = await fetch('/api/auth/me', {
@@ -35,7 +38,13 @@ export function useCurrentUser() {
         setIsAuthenticated(false)
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
+      // Retry on network errors (server might still be starting)
+      if (retryCount < maxRetries) {
+        console.log(`Auth check retry ${retryCount + 1}/${maxRetries}...`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+        return checkAuth(retryCount + 1)
+      }
+      console.error('Auth check failed after retries:', error)
       setUser(null)
       setIsAuthenticated(false)
     } finally {
@@ -43,7 +52,7 @@ export function useCurrentUser() {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -51,7 +60,7 @@ export function useCurrentUser() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       })
 
       const result = await response.json()

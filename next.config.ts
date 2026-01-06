@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Hide dev indicator (Turbopack floating button)
+  devIndicators: false,
+
   // Performance optimizations
   reactStrictMode: true,
 

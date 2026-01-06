@@ -1,0 +1,30 @@
+# Dashboard Uskup - Docker Compose for Development
+# Fixed HMR by allowing .next to sync with host
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3040:3000"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Only exclude node_modules (dependencies should stay in container)
+      - /app/node_modules
+      # NOTE: Removed /app/.next exclusion to enable proper HMR
+      # The build cache will now sync properly with file changes
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      # Magisterium AI API Key
+      - MAGISTERIUM_API_KEY=sk_wahyus_6446455d2b3cd531cb1e4c499735c2c109bf288540b57424aa000facda740422
+      # Note: Using Webpack (custom server.ts) - HMR may require restart
+    command: npx next dev -p 3000
+    restart: unless-stopped
+    # Enable file watching for Windows/Docker
+    tty: true
+    stdin_open: true

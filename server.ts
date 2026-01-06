@@ -5,15 +5,16 @@ import { Server } from 'socket.io';
 import next from 'next';
 
 const dev = process.env.NODE_ENV !== 'production';
-const currentPort = 3000;
+const currentPort = parseInt(process.env.PORT || '3000', 10);
 const hostname = '0.0.0.0';
 
 // Custom server with Socket.IO integration
 async function createCustomServer() {
   try {
-    // Create Next.js app
-    const nextApp = next({ 
+    // Create Next.js app - disable Turbopack for stable development
+    const nextApp = next({
       dev,
+      turbo: false, // Use Webpack instead of Turbopack
       dir: process.cwd(),
       // In production, use the current directory where .next is located
       conf: dev ? undefined : { distDir: './.next' }

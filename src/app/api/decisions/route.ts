@@ -11,15 +11,15 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
 
     const where: any = {}
-    
+
     if (status && status !== 'semua') {
       where.status = status
     }
-    
+
     if (kategori && kategori !== 'semua') {
       where.kategori = kategori
     }
-    
+
     if (search) {
       where.OR = [
         { judul: { contains: search, mode: 'insensitive' } },
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 // Create new decision
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },

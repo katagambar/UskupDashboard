@@ -1,16 +1,21 @@
 # 📚 API Documentation
+
 ## Dashboard Uskup Surabaya API Reference
 
 ### Base URL
+
 ```
 http://localhost:3000/api
 ```
 
 ### Authentication
+
 All protected endpoints require authentication via NextAuth.js session cookie.
 
 ### Standard Response Format
+
 #### Success Response
+
 ```json
 {
   "success": true,
@@ -22,6 +27,7 @@ All protected endpoints require authentication via NextAuth.js session cookie.
 ```
 
 #### Error Response
+
 ```json
 {
   "success": false,
@@ -45,14 +51,17 @@ All protected endpoints require authentication via NextAuth.js session cookie.
 ## 📅 Agenda API
 
 ### GET /api/agenda
+
 Get all agenda items with optional filtering.
 
 **Query Parameters:**
+
 - `jenis` (string): Filter by jenis (Kuria, Pastoral, Komisi, or "semua")
-- `status` (string): Filter by status (Dijadwalkan, Selesai, or "semua") 
+- `status` (string): Filter by status (Dijadwalkan, Selesai, or "semua")
 - `search` (string): Search in judul, lokasi, deskripsi
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -79,10 +88,12 @@ Get all agenda items with optional filtering.
 ```
 
 ### POST /api/agenda
+
 Create a new agenda item.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "judul": "Rapat Kuria Bulanan",
@@ -96,6 +107,7 @@ Create a new agenda item.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "success": true,
@@ -107,6 +119,7 @@ Create a new agenda item.
 ```
 
 **Error Responses:**
+
 - `400 Bad Request` - Validation errors
 - `401 Unauthorized` - Not authenticated
 - `500 Internal Server Error` - Database error
@@ -116,15 +129,18 @@ Create a new agenda item.
 ## ✅ Tasks API
 
 ### GET /api/tasks
+
 Get all tasks with optional filtering.
 
 **Query Parameters:**
+
 - `status` (string): Filter by status (Menunggu, Dalam Proses, Selesai, Terlambat, or "semua")
 - `prioritas` (string): Filter by prioritas (Tinggi, Sedang, Rendah, or "semua")
 - `kategori` (string): Filter by kategori (Pastoral, Keuangan, Pembangunan, etc.)
 - `search` (string): Search in judul, deskripsi
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -152,10 +168,12 @@ Get all tasks with optional filtering.
 ```
 
 ### POST /api/tasks
+
 Create a new task.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "judul": "Persiapan Natal",
@@ -170,15 +188,18 @@ Create a new task.
 **Response:** `201 Created`
 
 ### GET /api/tasks/[id]
+
 Get a specific task by ID.
 
 **Response:** `200 OK`
 
 ### PUT /api/tasks/[id]
+
 Update a specific task.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "status": "Selesai",
@@ -189,6 +210,7 @@ Update a specific task.
 **Response:** `200 OK`
 
 ### DELETE /api/tasks/[id]
+
 Delete a specific task.
 
 **Response:** `204 No Content`
@@ -198,14 +220,17 @@ Delete a specific task.
 ## 📄 Notulensi API
 
 ### GET /api/notulensi
+
 Get all notulensi with optional filtering.
 
 **Query Parameters:**
+
 - `status` (string): Filter by status (Draft, Menunggu Approve, Disetujui, or "semua")
 - `jenis` (string): Filter by jenis (Kuria, Pastoral, Komisi)
 - `search` (string): Search in judul, kesimpulan
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -237,10 +262,12 @@ Get all notulensi with optional filtering.
 ```
 
 ### POST /api/notulensi
+
 Create a new notulensi.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "judul": "Rapat Kuria 15 November",
@@ -260,15 +287,18 @@ Create a new notulensi.
 ## 📮 Surat API
 
 ### GET /api/surat
+
 Get all surat with optional filtering.
 
 **Query Parameters:**
+
 - `jenis` (string): Filter by jenis (Masuk, Keluar, Edaran)
 - `status` (string): Filter by status (Menunggu, Diproses, Selesai)
 - `prioritas` (string): Filter by prioritas (Normal, Tinggi, Segera)
 - `search` (string): Search in nomor, judul
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -296,10 +326,12 @@ Get all surat with optional filtering.
 ```
 
 ### POST /api/surat
+
 Create a new surat.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "nomor": "SK/2025/001",
@@ -320,14 +352,17 @@ Create a new surat.
 ## 🏛️ Decisions API
 
 ### GET /api/decisions
+
 Get all decisions with optional filtering.
 
 **Query Parameters:**
+
 - `status` (string): Filter by status (Dalam Perencanaan, Dalam Proses, Selesai, Tertunda)
 - `kategori` (string): Filter by kategori (Pembangunan, Pastoral, Keuangan, SDM)
 - `search` (string): Search in judul, deskripsi
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -353,10 +388,12 @@ Get all decisions with optional filtering.
 ```
 
 ### POST /api/decisions
+
 Create a new decision.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "judul": "Pembangunan Gereja Baru",
@@ -375,14 +412,17 @@ Create a new decision.
 ## 👨‍💼 Imam API
 
 ### GET /api/imam
+
 Get all imam with optional filtering.
 
 **Query Parameters:**
+
 - `status` (string): Filter by status (Aktif, Cuti, Pensiun)
 - `paroki` (string): Filter by paroki
 - `search` (string): Search in nama, paroki
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -405,10 +445,12 @@ Get all imam with optional filtering.
 ```
 
 ### POST /api/imam
+
 Create a new imam record.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "nama": "Pastor Mario Rossi",
@@ -426,12 +468,117 @@ Create a new imam record.
 
 ---
 
+## ⚙️ Master Parameter API
+
+Manage dynamic dropdown values used across the application.
+
+### GET /api/master/parameter
+
+Get parameters with optional filtering.
+
+**Query Parameters:**
+
+- `tipe` (string): Filter by parameter type (PRIORITAS, KATEGORI_TUGAS, JENIS_SURAT, etc.)
+- `aktif` (string): Filter by active status ("true" or "false", default: "true")
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "param_123",
+      "tipe": "PRIORITAS",
+      "kode": "TINGGI",
+      "nama": "Tinggi",
+      "warna": "#EF4444",
+      "urutan": 1,
+      "aktif": true,
+      "createdAt": "2025-01-04T10:00:00.000Z",
+      "updatedAt": "2025-01-04T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### POST /api/master/parameter
+
+Create a new parameter.
+
+**Headers:** `Content-Type: application/json`
+**Permissions:** USKUP, SEKRETARIS, VIKJEN only
+
+**Body:**
+
+```json
+{
+  "tipe": "PRIORITAS",
+  "kode": "SANGAT_TINGGI",
+  "nama": "Sangat Tinggi",
+  "warna": "#DC2626",
+  "urutan": 0
+}
+```
+
+**Response:** `201 Created`
+
+### PATCH /api/master/parameter/[id]
+
+Update an existing parameter.
+
+**Headers:** `Content-Type: application/json`
+**Permissions:** USKUP, SEKRETARIS, VIKJEN only
+
+**Body:**
+
+```json
+{
+  "nama": "Updated Name",
+  "warna": "#3B82F6",
+  "urutan": 2,
+  "aktif": false
+}
+```
+
+**Response:** `200 OK`
+
+### DELETE /api/master/parameter/[id]
+
+Delete a parameter.
+
+**Permissions:** USKUP, SEKRETARIS, VIKJEN only
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Parameter deleted"
+}
+```
+
+**Supported Parameter Types:**
+
+- `PRIORITAS` - Task priority levels
+- `KATEGORI_TUGAS` - Task categories
+- `JENIS_SURAT` - Letter types
+- `JENIS_PERTEMUAN` - Meeting types
+- `JENIS_NOTULENSI` - Notes types
+- `PERIODE_LAPORAN` - Report periods
+- `KATEGORI_ISU` - Issue categories
+- `STATUS_TUGAS` - Task statuses
+
+---
+
 ## 📊 Dashboard API
 
 ### GET /api/dashboard
+
 Get aggregated dashboard data with caching.
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -481,12 +628,15 @@ Get aggregated dashboard data with caching.
 ## 🔐 Authentication API
 
 ### POST /api/auth/password
+
 Password management endpoints.
 
 #### GET /api/auth/password/status
+
 Get password status for current user.
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -499,10 +649,12 @@ Get password status for current user.
 ```
 
 #### POST /api/auth/password
+
 Set or update password for current user.
 
 **Headers:** `Content-Type: application/json`
 **Body:**
+
 ```json
 {
   "currentPassword": "oldPassword123!",
@@ -512,6 +664,7 @@ Set or update password for current user.
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -520,9 +673,11 @@ Set or update password for current user.
 ```
 
 #### Generate secure password
+
 Generate a cryptographically secure random password.
 
 **Response:** `200 OK`
+
 ```json
 {
   "success": true,
@@ -538,6 +693,7 @@ Generate a cryptographically secure random password.
 ## 🔄 Socket.IO Real-time API
 
 ### Connection
+
 **URL:** `ws://localhost:3000/api/socketio`
 **Protocol:** WebSocket with Socket.IO
 
@@ -547,6 +703,7 @@ Generate a cryptographically secure random password.
 
 **`user:identify`**
 Identify the connected user.
+
 ```json
 {
   "id": "user_123",
@@ -557,6 +714,7 @@ Identify the connected user.
 
 **`notification:send`**
 Send a notification to users.
+
 ```json
 {
   "type": "info",
@@ -568,6 +726,7 @@ Send a notification to users.
 
 **`data:update`**
 Notify about data changes.
+
 ```json
 {
   "type": "agenda",
@@ -579,6 +738,7 @@ Notify about data changes.
 
 **`dashboard:refresh`**
 Request dashboard refresh.
+
 ```json
 {
   "userId": "user_123"
@@ -589,6 +749,7 @@ Request dashboard refresh.
 
 **`connection:established`**
 Sent when connection is established.
+
 ```json
 {
   "message": "Welcome to Dashboard Uskup Surabaya Real-time System!",
@@ -603,6 +764,7 @@ Sent when connection is established.
 
 **`user:joined`** / **`user:left`**
 User connection status updates.
+
 ```json
 {
   "user": {
@@ -616,6 +778,7 @@ User connection status updates.
 
 **`notification:receive`**
 Receive a notification.
+
 ```json
 {
   "type": "info",
@@ -627,6 +790,7 @@ Receive a notification.
 
 **`data:changed`**
 Data has been updated by another user.
+
 ```json
 {
   "type": "agenda",
@@ -667,7 +831,8 @@ Data has been updated by another user.
 ## 🆘 Support
 
 For API support and questions:
-- **Email**: tech@keuskupan-surabaya.org
+
+- **Email**: <tech@keuskupan-surabaya.org>
 - **Documentation**: [Internal Wiki]
 - **Status Page**: [Status Dashboard]
 

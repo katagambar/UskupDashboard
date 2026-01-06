@@ -11,15 +11,15 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
 
     const where: any = {}
-    
+
     if (status && status !== 'semua') {
       where.status = status
     }
-    
+
     if (paroki) {
       where.paroki = { contains: paroki, mode: 'insensitive' }
     }
-    
+
     if (search) {
       where.OR = [
         { nama: { contains: search, mode: 'insensitive' } },
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 // Create new imam entry
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -84,6 +84,43 @@ export async function POST(request: NextRequest) {
     console.error('Error creating imam:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to create imam entry' },
+      { status: 500 }
+    )
+  }
+}
+
+// Clear all imam data (for sync preparation)
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await getCurrentUserFromRequest(request)
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if action is "clear-all"
+    const { searchParams } = new URL(request.url)
+    const action = searchParams.get('action')
+
+    if (action === 'clear-all') {
+      const result = await db.imam.deleteMany({})
+      return NextResponse.json({
+        success: true,
+        message: `Deleted ${result.count} imam records`,
+        count: result.count
+      })
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Missing action parameter' },
+      { status: 400 }
+    )
+  } catch (error) {
+    console.error('Error deleting imam data:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to clear imam data' },
       { status: 500 }
     )
   }

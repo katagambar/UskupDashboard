@@ -7,15 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USER & ROLE MANAGEMENT
+// ============================================
+
+// Role/Jabatan di Keuskupan
+enum UserRole {
+  USKUP           // Uskup - Decision Maker
+  SEKRETARIS      // Sekretaris Uskup - Administrator
+  VIKJEN          // Vikaris Jenderal
+  VIKYUD          // Vikaris Yudisial
+  EKONOM          // Ekonom Keuskupan
+  DELEGATUS       // Delegatus
+  KURIA           // Anggota Kuria lainnya
+  VIKEP           // Vikaris Episkopal (Wilayah)
+  KOMISI          // Ketua/Anggota Komisi
+  PAROKI          // Pastor Paroki (untuk reporting)
+  STAFF           // Staff biasa
+}
+
+// Dynamic Parameters for Dropdowns
+model MasterParameter {
+  id        String   @id @default(cuid())
+  tipe      String   // PRIORITAS, KATEGORI_TUGAS, JENIS_SURAT, JENIS_PERTEMUAN, JENIS_NOTULENSI, PERIODE, KATEGORI_ISU
+  kode      String   // Unique code within type
+  nama      String   // Display name
+  warna     String?  // Optional color for visual distinction
+  urutan    Int      @default(0)
+  aktif     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tipe, kode])
+  @@index([tipe])
+  @@index([tipe, aktif])
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
   name          String?
-  role          String         @default("user")
+  role          String         @default("STAFF")  // UserRole enum value
+  jabatan       String?        // Jabatan lengkap: "Vikaris Jenderal", "Ekonom", dll
+  department    String?        // Departemen/Komisi jika ada
+  canApprove    Boolean        @default(false)    // Bisa approve dokumen?
+  signatureUrl  String?        // URL gambar tanda tangan (untuk digital sign)
   password      String?
   passwordSet   Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  
+  // Relations
   accounts      Account[]
   agenda        Agenda[]
   decisions     Decision[]
@@ -24,13 +66,28 @@ model User {
   sessions      Session[]
   surat         Surat[]
   tasks         Task[]
+  
+  // New relations for collaboration
+  opinionsGiven    Opinion[]     @relation("OpinionAuthor")
+  issuesCreated    Issue[]       @relation("IssueCreator")
+  issuesAssigned   Issue[]       @relation("IssueAssignee")
+  
+  // Phase 4: Reporting relations
+  reportsSubmitted Report[]      @relation("SubmittedReports")
+  reportsReviewed  Report[]      @relation("ReviewedReports")
+
+  // Indexes for performance
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Agenda {
   id               String     @id @default(cuid())
   judul            String
-  tanggal          String
-  waktu            String
+  tanggal          String     // Start date
+  tanggalAkhir     String?    // End date (null = same as tanggal for single-day)
+  waktu            String     // Start time
+  waktuAkhir       String?    // End time (optional)
   lokasi           String
   jenis            String
   peserta          String
@@ -93,11 +150,60 @@ model Surat {
   lampiran  String?
   status    String   @default("Menunggu")
   prioritas String   @default("Normal")
+  
+  // Digital Signature fields
+  isSigned        Boolean   @default(false)
+  signedAt        DateTime?
+  signedBy        String?   // User ID yang menandatangani
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String
   creator   User     @relation(fields: [createdBy], references: [id])
+  
+  // Relation to signature
+  signature DigitalSignature?
 }
+
+// ============================================
+// DIGITAL SIGNATURE SYSTEM
+// ============================================
+
+// Model Tanda Tangan Digital
+model DigitalSignature {
+  id              String    @id @default(cuid())
+  
+  // Document reference
+  suratId         String    @unique
+  surat           Surat     @relation(fields: [suratId], references: [id], onDelete: Cascade)
+  
+  // Cryptographic data
+  documentHash    String    @unique  // SHA-256 hash of document content
+  signatureHash   String    @unique  // Unique signature identifier
+  qrCodeData      String              // Data encoded in QR code
+  
+  // Signer info
+  signerId        String
+  signerName      String
+  signerRole      String    // Role saat signing (USKUP, VIKJEN, etc)
+  signerJabatan   String?   // Jabatan lengkap
+  
+  // Signature image
+  signatureImage  String?   // Base64 or URL gambar tanda tangan
+  
+  // Verification
+  verificationUrl String    // URL untuk verifikasi publik
+  isValid         Boolean   @default(true)
+  revokedAt       DateTime?
+  revokedReason   String?
+  
+  // Metadata
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime  @default(now())
+}
+
 
 model Decision {
   id              String    @id @default(cuid())
@@ -116,17 +222,29 @@ model Decision {
 }
 
 model Imam {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   nama            String
   paroki          String
   jabatan         String
-  status          String   @default("Aktif")
+  status          String    @default("Aktif")
   tanggalTahbisan String
   nomorTelepon    String
   email           String
   alamat          String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  
+  // Pororomo sync fields (will be refined when API is ready)
+  pororomoId      String?   @unique  // ID dari Pororomo untuk tracking
+  skPenempatan    String?            // SK penempatan/tugas
+  skTanggal       String?            // Tanggal SK
+  domisili        String?            // Lokasi domisili saat ini
+  statusDetail    String?            // Detail: keluar/meninggal/suspensi
+  
+  // Sync metadata
+  lastSyncAt      DateTime?
+  syncSource      String?   @default("manual") // manual/pororomo
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Notification {
@@ -173,4 +291,238 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Profil Uskup - editable profile untuk keuskupan
+model BishopProfile {
+  id                  String   @id @default(cuid())
+  
+  // Informasi Personal
+  namaLengkap         String
+  gelar               String?
+  tanggalLahir        String?
+  tempatLahir         String?
+  foto                String?
+  
+  // Kontak
+  email               String?
+  telepon             String?
+  alamat              String?
+  website             String?
+  
+  // Informasi Keuskupan
+  namaKeuskupan       String
+  tanggalTahbisanUskup String?
+  jumlahParoki        Int      @default(0)
+  jumlahUmat          String?
+  
+  // Pendidikan (JSON string)
+  pendidikan          String?  // Store as JSON
+  
+  // Pengalaman (JSON string)
+  pengalaman          String?  // Store as JSON
+  
+  // Statistik
+  totalPertemuanKuria   Int    @default(0)
+  totalPastoralVisitasi Int    @default(0)
+  totalSuratEdaran      Int    @default(0)
+  totalKeputusanPenting Int    @default(0)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ============================================
+// MASTER DATA MODELS
+// ============================================
+
+// Master Paroki - Data paroki dalam keuskupan
+model Paroki {
+  id          String   @id @default(cuid())
+  nama        String
+  alamat      String?
+  telepon     String?
+  email       String?
+  pastorParoki String?
+  wilayah     String?  // Wilayah/Kevikepan
+  status      String   @default("Aktif")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Master Kategori - Kategori untuk berbagai entitas
+model Kategori {
+  id          String   @id @default(cuid())
+  nama        String
+  tipe        String   // agenda, tugas, surat, keputusan
+  deskripsi   String?
+  warna       String?  // Warna badge/label
+  status      String   @default("Aktif")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Master Template Surat
+model TemplateSurat {
+  id          String   @id @default(cuid())
+  nama        String
+  kategori    String
+  deskripsi   String?
+  konten      String   // Template content
+  status      String   @default("Aktif")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// POROROMO INTEGRATION MODELS
+// ============================================
+
+// Konfigurasi koneksi Pororomo API
+model PororomoConfig {
+  id          String    @id @default(cuid())
+  apiUrl      String
+  apiKey      String?
+  username    String?
+  password    String?   // Encrypted
+  isActive    Boolean   @default(false)
+  lastTestAt  DateTime?
+  testResult  String?   // success/failed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Log history sync dari Pororomo
+model SyncLog {
+  id          String    @id @default(cuid())
+  source      String    // "pororomo"
+  status      String    // "success", "failed", "partial"
+  recordsSync Int       @default(0)
+  recordsNew  Int       @default(0)
+  recordsUpdated Int    @default(0)
+  errorMsg    String?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
+// ============================================
+// COLLABORATION & CONSULTATION SYSTEM
+// ============================================
+
+// Status Isu/Kasus
+enum IssueStatus {
+  DRAFT           // Baru dibuat
+  OPEN            // Aktif, menunggu pendapat
+  IN_REVIEW       // Sedang direview
+  DECIDED         // Keputusan sudah diambil
+  CLOSED          // Selesai/Arsip
+}
+
+// Prioritas Isu
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Model Isu/Kasus untuk Disposisi & Konsultasi
+model Issue {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  category        String?       // Pastoral, Keuangan, Hukum Kanonik, dll
+  priority        String        @default("MEDIUM")
+  status          String        @default("DRAFT")
+  
+  // Dokumen terkait (opsional)
+  relatedDocType  String?       // "Surat", "Laporan", dll
+  relatedDocId    String?       // ID dokumen terkait
+  attachments     String?       // JSON array of file paths
+  
+  // Keputusan akhir
+  decision        String?       // Keputusan final Uskup
+  decisionDate    DateTime?
+  decisionNotes   String?
+  
+  // Relasi
+  createdBy       String
+  creator         User          @relation("IssueCreator", fields: [createdBy], references: [id])
+  assignedTo      String?       // Primary assignee (untuk tracking)
+  assignee        User?         @relation("IssueAssignee", fields: [assignedTo], references: [id])
+  
+  // Pendapat dari berbagai pejabat
+  opinions        Opinion[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Model Pendapat/Telaah dari Pejabat
+model Opinion {
+  id              String        @id @default(cuid())
+  issueId         String
+  issue           Issue         @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  
+  authorId        String
+  author          User          @relation("OpinionAuthor", fields: [authorId], references: [id])
+  
+  content         String        // Isi pendapat
+  recommendation  String?       // Rekomendasi: "Setuju", "Tolak", "Perlu Kajian", dll
+  attachments     String?       // JSON array of file paths
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// ============================================
+// PHASE 4: SMART REPORTING SYSTEM
+// ============================================
+
+enum ReportType {
+  MONTHLY       // Laporan Bulanan
+  QUARTERLY     // Laporan Triwulan
+  ANNUAL        // Laporan Tahunan
+  EVENT         // Laporan Kegiatan/Event
+}
+
+enum ReportStatus {
+  DRAFT         // Masih disusun
+  SUBMITTED     // Sudah dikirim, menunggu review
+  REVIEWED      // Sudah direview
+  APPROVED      // Disetujui
+  NEEDS_REVISION // Perlu revisi
+}
+
+model Report {
+  id            String       @id @default(cuid())
+  type          ReportType
+  title         String
+  period        String       // e.g., "Januari 2026", "Q1 2026"
+  content       String       // Main report content
+  highlights    String?      // Key achievements/highlights
+  challenges    String?      // Issues and challenges faced
+  requests      String?      // Requests to leadership
+  statistics    String?      // JSON string for numeric data
+  attachments   String?      // JSON array of file paths
+  status        ReportStatus @default(DRAFT)
+  submittedAt   DateTime?
+  reviewedAt    DateTime?
+  reviewNotes   String?
+  
+  // Submitter relation
+  submittedBy   String
+  submitter     User         @relation("SubmittedReports", fields: [submittedBy], references: [id])
+  
+  // Reviewer relation (optional)
+  reviewedBy    String?
+  reviewer      User?        @relation("ReviewedReports", fields: [reviewedBy], references: [id])
+  
+  // Unit information
+  unitType      String       // PAROKI, KOMISI, KEVIKEPAN
+  unitId        String?      // Reference to Paroki.id if applicable
+  unitName      String       // Human readable: "Paroki Katedral Hati Kudus"
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }

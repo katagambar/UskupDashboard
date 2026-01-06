@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
 
     const where: any = {}
-    
+
     if (jenis && jenis !== 'semua') {
       where.jenis = jenis
     }
-    
+
     if (status && status !== 'semua') {
       where.status = status
     }
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (prioritas && prioritas !== 'semua') {
       where.prioritas = prioritas
     }
-    
+
     if (search) {
       where.OR = [
         { judul: { contains: search, mode: 'insensitive' } },
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 // Create new surat
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },

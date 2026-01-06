@@ -11,15 +11,18 @@ interface JWTPayload {
   name: string
   role: string
   exp: number
+  [key: string]: unknown // Index signature for jose compatibility
 }
 
-export async function createJWT(user: { id: string; email: string; name: string; role: string }) {
+export async function createJWT(user: { id: string; email: string; name: string; role: string }, rememberMe: boolean = false) {
+  const expirationDays = rememberMe ? 30 : 1 // 30 days if remember me, otherwise 1 day
+
   const payload: JWTPayload = {
     userId: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * expirationDays
   }
 
   const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dashboard-uskup-surabaya-secret')
@@ -28,8 +31,31 @@ export async function createJWT(user: { id: string; email: string; name: string;
   return new SignJWT(payload)
     .setProtectedHeader({ alg })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime(rememberMe ? '30d' : '1d')
     .sign(secret)
+}
+
+// Create refresh token (longer expiration)
+export async function createRefreshToken(userId: string) {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dashboard-uskup-surabaya-secret')
+
+  return new SignJWT({ userId, type: 'refresh' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('60d') // 60 days for refresh token
+    .sign(secret)
+}
+
+// Verify refresh token
+export async function verifyRefreshToken(token: string): Promise<{ userId: string } | null> {
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dashboard-uskup-surabaya-secret')
+    const { payload } = await jwtVerify(token, secret)
+    if (payload.type !== 'refresh') return null
+    return { userId: payload.userId as string }
+  } catch {
+    return null
+  }
 }
 
 export async function verifyJWT(token: string): Promise<JWTPayload | null> {

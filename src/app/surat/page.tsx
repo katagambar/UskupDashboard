@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Search, Download, Eye, Edit, Send, FileText, Calendar, User, Mail, Clock, Trash2 } from "lucide-react"
 import { showSuccess, showError, confirmDelete, confirmAction } from "@/lib/alerts"
+import { useJenisSurat } from "@/hooks/use-parameters"
 
 interface Surat {
   id: string
@@ -36,53 +37,7 @@ interface Template {
   konten: string
 }
 
-const sampleSurat: Surat[] = [
-  {
-    id: "1",
-    judul: "Surat Edaran Persiapan Adven",
-    nomorSurat: "SED/001/2025",
-    tujuan: "Seluruh Paroki",
-    jenis: "Edaran",
-    status: "Terkirim",
-    tanggal: "2025-01-10",
-    template: "edaran",
-    createdAt: "2025-01-10T09:00:00Z",
-    sentAt: "2025-01-10T10:30:00Z"
-  },
-  {
-    id: "2",
-    judul: "Surat Rekomendasi Imam",
-    nomorSurat: "SRK/002/2025",
-    tujuan: "Paroki Santo Paulus",
-    jenis: "Rekomendasi",
-    status: "Draft",
-    tanggal: "2025-01-12",
-    template: "rekomendasi",
-    createdAt: "2025-01-12T14:00:00Z"
-  },
-  {
-    id: "3",
-    judul: "Surat Undangan Rapat Kuria",
-    nomorSurat: "SUD/003/2025",
-    tujuan: "Anggota Kuria",
-    jenis: "Undangan",
-    status: "Menunggu Tanda Tangan",
-    tanggal: "2025-01-14",
-    template: "undangan",
-    createdAt: "2025-01-14T11:00:00Z"
-  },
-  {
-    id: "4",
-    judul: "Surat Persetujuan Pembangunan",
-    nomorSurat: "SPB/004/2025",
-    tujuan: "Panitia Pembangunan",
-    jenis: "Persetujuan",
-    status: "Draft",
-    tanggal: "2025-01-15",
-    template: "persetujuan",
-    createdAt: "2025-01-15T08:00:00Z"
-  }
-]
+// Note: Data surat fetched from API
 
 const sampleTemplates: Template[] = [
   {
@@ -116,8 +71,41 @@ const sampleTemplates: Template[] = [
 ]
 
 export default function SuratPage() {
-  const [suratList, setSuratList] = useState<Surat[]>(sampleSurat)
+  const [suratList, setSuratList] = useState<Surat[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [templates] = useState<Template[]>(sampleTemplates)
+  const { parameters: jenisSuratOptions } = useJenisSurat()
+
+  // Fetch surat data from API
+  useEffect(() => {
+    fetchSuratData()
+  }, [])
+
+  const fetchSuratData = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/surat', { credentials: 'include' })
+      const result = await response.json()
+      if (result.success) {
+        // Map API response to local interface
+        const mappedData = (result.data || []).map((s: any) => ({
+          id: s.id,
+          judul: s.judul,
+          nomorSurat: s.nomor,
+          tujuan: s.penerima,
+          jenis: s.jenis,
+          status: s.status,
+          tanggal: s.tanggal,
+          createdAt: s.createdAt
+        }))
+        setSuratList(mappedData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch surat:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
   const [searchTerm, setSearchTerm] = useState("")
   const [filterJenis, setFilterJenis] = useState("semua")
   const [filterStatus, setFilterStatus] = useState("semua")
@@ -127,7 +115,7 @@ export default function SuratPage() {
 
   const filteredSurat = suratList.filter(item => {
     const matchesSearch = item.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.tujuan.toLowerCase().includes(searchTerm.toLowerCase())
+      item.tujuan.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesJenis = filterJenis === "semua" || item.jenis === filterJenis
     const matchesStatus = filterStatus === "semua" || item.status === filterStatus
     return matchesSearch && matchesJenis && matchesStatus
@@ -199,8 +187,8 @@ export default function SuratPage() {
                             <p className="text-sm text-muted-foreground">
                               {template.deskripsi}
                             </p>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               className="w-full"
                               onClick={() => handleUseTemplate(template)}
                             >
@@ -255,19 +243,17 @@ export default function SuratPage() {
                           <SelectValue placeholder="Pilih jenis" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="edaran">Edaran</SelectItem>
-                          <SelectItem value="undangan">Undangan</SelectItem>
-                          <SelectItem value="rekomendasi">Rekomendasi</SelectItem>
-                          <SelectItem value="persetujuan">Persetujuan</SelectItem>
-                          <SelectItem value="lainnya">Lainnya</SelectItem>
+                          {jenisSuratOptions.map((j) => (
+                            <SelectItem key={j.id} value={j.nama}>{j.nama}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="isi">Isi Surat</Label>
-                    <Textarea 
-                      id="isi" 
+                    <Textarea
+                      id="isi"
                       placeholder="Tuliskan isi surat..."
                       className="min-h-[300px]"
                       defaultValue={selectedTemplate?.konten}
@@ -368,10 +354,9 @@ export default function SuratPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="semua">Semua</SelectItem>
-                      <SelectItem value="Edaran">Edaran</SelectItem>
-                      <SelectItem value="Undangan">Undangan</SelectItem>
-                      <SelectItem value="Rekomendasi">Rekomendasi</SelectItem>
-                      <SelectItem value="Persetujuan">Persetujuan</SelectItem>
+                      {jenisSuratOptions.map((j) => (
+                        <SelectItem key={j.id} value={j.nama}>{j.nama}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -480,8 +465,8 @@ export default function SuratPage() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="flex-1"
                           onClick={() => handleUseTemplate(template)}
                         >

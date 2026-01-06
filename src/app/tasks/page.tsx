@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Search, CheckCircle, Clock, AlertCircle, Calendar, User, Flag, Edit, Trash2, Eye } from "lucide-react"
 import { showSuccess, showError, confirmDelete, confirmAction } from "@/lib/alerts"
 import { useTasks, useCrud } from "@/hooks/useApi"
+import { usePrioritas, useKategoriTugas } from "@/hooks/use-parameters"
 
 interface Task {
   id: string
@@ -34,7 +35,9 @@ interface Task {
 export default function TasksPage() {
   const { data: taskList, loading, refetch } = useTasks()
   const { create, update, remove, loading: crudLoading } = useCrud('/api/tasks')
-  
+  const { parameters: prioritasOptions } = usePrioritas()
+  const { parameters: kategoriOptions } = useKategoriTugas()
+
   const [searchTerm, setSearchTerm] = useState("")
   const [filterPrioritas, setFilterPrioritas] = useState("semua")
   const [filterStatus, setFilterStatus] = useState("semua")
@@ -54,25 +57,16 @@ export default function TasksPage() {
 
   const filteredTasks = taskList.filter(item => {
     const matchesSearch = item.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
+      item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesPrioritas = filterPrioritas === "semua" || item.prioritas === filterPrioritas
     const matchesStatus = filterStatus === "semua" || item.status === filterStatus
     return matchesSearch && matchesPrioritas && matchesStatus
   })
 
   const handleCreate = async () => {
-    console.log('🚀 NEW VALIDATION CODE RUNNING!')
-    console.log('Form data before validation:', formData)
-    console.log('Validation checks:', {
-      judul: !!formData.judul,
-      deskripsi: !!formData.deskripsi,
-      prioritas: !!formData.prioritas,
-      deadline: !!formData.deadline,
-      kategori: !!formData.kategori,
-      penanggungJawab: !!formData.penanggungJawab
-    })
 
-    const missingFields = []
+
+    const missingFields: string[] = []
     if (!formData.judul?.trim()) missingFields.push('judul')
     if (!formData.deskripsi?.trim()) missingFields.push('deskripsi')
     if (!formData.prioritas?.trim()) missingFields.push('prioritas')
@@ -81,15 +75,15 @@ export default function TasksPage() {
     if (!formData.penanggungJawab?.trim()) missingFields.push('penanggungJawab')
 
     if (missingFields.length > 0) {
-      console.error('Missing fields:', missingFields)
+
       showError(`Mohon lengkapi field: ${missingFields.join(', ')}`)
       return
     }
 
-    console.log('✅ Validation passed, creating task...')
+
 
     const result = await create(formData)
-    
+
     if (result.success) {
       showSuccess("Tugas berhasil ditambahkan")
       setIsCreateDialogOpen(false)
@@ -99,8 +93,7 @@ export default function TasksPage() {
   }
 
   const handleEdit = (task: Task) => {
-    console.log('📝 EDIT FUNCTION CALLED!')
-    console.log('Task to edit:', task)
+
 
     setSelectedTask(task)
     const updatedFormData = {
@@ -111,22 +104,20 @@ export default function TasksPage() {
       kategori: task.kategori,
       penanggungJawab: task.penanggungJawab
     }
-    console.log('Setting form data to:', updatedFormData)
+
     setFormData(updatedFormData)
     setIsEditDialogOpen(true)
   }
 
   const handleUpdate = async () => {
-    console.log('🔧 UPDATE FUNCTION CALLED!')
-    console.log('Selected task:', selectedTask)
-    console.log('Form data:', formData)
+
 
     if (!selectedTask) {
       showError("Tidak ada task yang dipilih")
       return
     }
 
-    const missingFields = []
+    const missingFields: string[] = []
     if (!formData.judul?.trim()) missingFields.push('judul')
     if (!formData.deskripsi?.trim()) missingFields.push('deskripsi')
     if (!formData.prioritas?.trim()) missingFields.push('prioritas')
@@ -135,14 +126,12 @@ export default function TasksPage() {
     if (!formData.penanggungJawab?.trim()) missingFields.push('penanggungJawab')
 
     if (missingFields.length > 0) {
-      console.error('Missing fields:', missingFields)
+
       showError(`Mohon lengkapi field: ${missingFields.join(', ')}`)
       return
     }
 
-    console.log('✅ Validation passed, updating task...')
     const result = await update(selectedTask.id, formData)
-    console.log('Update result:', result)
 
     if (result.success) {
       showSuccess("Tugas berhasil diperbarui")
@@ -266,60 +255,57 @@ export default function TasksPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="judul">Judul Tugas *</Label>
-                  <Input 
-                    id="judul" 
+                  <Input
+                    id="judul"
                     placeholder="Masukkan judul tugas"
                     value={formData.judul}
-                    onChange={(e) => setFormData({...formData, judul: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="deskripsi">Deskripsi *</Label>
-                  <Textarea 
-                    id="deskripsi" 
+                  <Textarea
+                    id="deskripsi"
                     placeholder="Tuliskan deskripsi tugas..."
                     className="min-h-[100px]"
                     value={formData.deskripsi}
-                    onChange={(e) => setFormData({...formData, deskripsi: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="prioritas">Prioritas *</Label>
-                    <Select value={formData.prioritas} onValueChange={(value) => setFormData({...formData, prioritas: value})}>
+                    <Select value={formData.prioritas} onValueChange={(value) => setFormData({ ...formData, prioritas: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih prioritas" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Tinggi">Tinggi</SelectItem>
-                        <SelectItem value="Sedang">Sedang</SelectItem>
-                        <SelectItem value="Rendah">Rendah</SelectItem>
+                        {prioritasOptions.map((p) => (
+                          <SelectItem key={p.id} value={p.nama}>{p.nama}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="deadline">Deadline *</Label>
-                    <Input 
-                      id="deadline" 
+                    <Input
+                      id="deadline"
                       type="date"
                       value={formData.deadline}
-                      onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="kategori">Kategori *</Label>
-                  <Select value={formData.kategori} onValueChange={(value) => setFormData({...formData, kategori: value})}>
+                  <Select value={formData.kategori} onValueChange={(value) => setFormData({ ...formData, kategori: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Pastoral">Pastoral</SelectItem>
-                      <SelectItem value="Keuangan">Keuangan</SelectItem>
-                      <SelectItem value="Pembangunan">Pembangunan</SelectItem>
-                      <SelectItem value="Komunikasi">Komunikasi</SelectItem>
-                      <SelectItem value="SDM">SDM</SelectItem>
-                      <SelectItem value="Lainnya">Lainnya</SelectItem>
+                      {kategoriOptions.map((k) => (
+                        <SelectItem key={k.id} value={k.nama}>{k.nama}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -329,7 +315,7 @@ export default function TasksPage() {
                     id="penanggungJawab"
                     placeholder="Masukkan nama penanggung jawab"
                     value={formData.penanggungJawab}
-                    onChange={(e) => setFormData({...formData, penanggungJawab: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, penanggungJawab: e.target.value })}
                   />
                 </div>
               </div>
@@ -427,9 +413,9 @@ export default function TasksPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="semua">Semua</SelectItem>
-                      <SelectItem value="Tinggi">Tinggi</SelectItem>
-                      <SelectItem value="Sedang">Sedang</SelectItem>
-                      <SelectItem value="Rendah">Rendah</SelectItem>
+                      {prioritasOptions.map((p) => (
+                        <SelectItem key={p.id} value={p.nama}>{p.nama}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -477,17 +463,16 @@ export default function TasksPage() {
                             <span>Progress</span>
                             <span className="text-muted-foreground">{task.progress}%</span>
                           </div>
-                          <Progress 
-                            value={task.progress} 
-                            className={`h-2 ${
-                              task.progress >= 80 
-                                ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                                : task.progress >= 50 
+                          <Progress
+                            value={task.progress}
+                            className={`h-2 ${task.progress >= 80
+                              ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
+                              : task.progress >= 50
                                 ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
                                 : task.progress >= 25
-                                ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                                : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                            }`}
+                                  ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                  : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                              }`}
                           />
                         </div>
                       </div>
@@ -501,9 +486,9 @@ export default function TasksPage() {
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleDelete(task.id, task.judul)}
                           className="text-red-600 hover:text-red-700"
                         >
@@ -588,17 +573,16 @@ export default function TasksPage() {
                         <TableCell>{getStatusBadge(task.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Progress 
-                              value={task.progress} 
-                              className={`h-2 w-16 ${
-                                task.progress >= 80 
-                                  ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                                  : task.progress >= 50 
+                            <Progress
+                              value={task.progress}
+                              className={`h-2 w-16 ${task.progress >= 80
+                                ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
+                                : task.progress >= 50
                                   ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
                                   : task.progress >= 25
-                                  ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                                  : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                              }`}
+                                    ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                    : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                                }`}
                             />
                             <span className="text-sm">{task.progress}%</span>
                           </div>
@@ -617,9 +601,9 @@ export default function TasksPage() {
                             <Button variant="ghost" size="sm">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDelete(task.id, task.judul)}
                               className="text-red-600 hover:text-red-700"
                             >
@@ -648,60 +632,57 @@ export default function TasksPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-judul">Judul Tugas *</Label>
-                <Input 
-                  id="edit-judul" 
+                <Input
+                  id="edit-judul"
                   placeholder="Masukkan judul tugas"
                   value={formData.judul}
-                  onChange={(e) => setFormData({...formData, judul: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-deskripsi">Deskripsi *</Label>
-                <Textarea 
-                  id="edit-deskripsi" 
+                <Textarea
+                  id="edit-deskripsi"
                   placeholder="Tuliskan deskripsi tugas..."
                   className="min-h-[100px]"
                   value={formData.deskripsi}
-                  onChange={(e) => setFormData({...formData, deskripsi: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-prioritas">Prioritas *</Label>
-                  <Select value={formData.prioritas} onValueChange={(value) => setFormData({...formData, prioritas: value})}>
+                  <Select value={formData.prioritas} onValueChange={(value) => setFormData({ ...formData, prioritas: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih prioritas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Tinggi">Tinggi</SelectItem>
-                      <SelectItem value="Sedang">Sedang</SelectItem>
-                      <SelectItem value="Rendah">Rendah</SelectItem>
+                      {prioritasOptions.map((p) => (
+                        <SelectItem key={p.id} value={p.nama}>{p.nama}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-deadline">Deadline *</Label>
-                  <Input 
-                    id="edit-deadline" 
+                  <Input
+                    id="edit-deadline"
                     type="date"
                     value={formData.deadline}
-                    onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                   />
                 </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-kategori">Kategori *</Label>
-                <Select value={formData.kategori} onValueChange={(value) => setFormData({...formData, kategori: value})}>
+                <Select value={formData.kategori} onValueChange={(value) => setFormData({ ...formData, kategori: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih kategori" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Pastoral">Pastoral</SelectItem>
-                    <SelectItem value="Keuangan">Keuangan</SelectItem>
-                    <SelectItem value="Pembangunan">Pembangunan</SelectItem>
-                    <SelectItem value="Komunikasi">Komunikasi</SelectItem>
-                    <SelectItem value="SDM">SDM</SelectItem>
-                    <SelectItem value="Lainnya">Lainnya</SelectItem>
+                    {kategoriOptions.map((k) => (
+                      <SelectItem key={k.id} value={k.nama}>{k.nama}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -711,7 +692,7 @@ export default function TasksPage() {
                   id="edit-penanggungJawab"
                   placeholder="Masukkan nama penanggung jawab"
                   value={formData.penanggungJawab}
-                  onChange={(e) => setFormData({...formData, penanggungJawab: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, penanggungJawab: e.target.value })}
                 />
               </div>
             </div>
@@ -750,6 +731,7 @@ export default function TasksPage() {
                   value={progressValue}
                   onChange={(e) => setProgressValue(Number(e.target.value))}
                   className="w-full"
+                  aria-label="Progress slider"
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>0%</span>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,14 +13,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Timeline, TimelineItem, TimelineContent, TimelineDot, TimelineHeader, TimelineTitle } from "@/components/ui/timeline"
-import { 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
-  Calendar, 
-  FileText, 
-  TrendingUp, 
-  BarChart3, 
+import {
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Calendar,
+  FileText,
+  TrendingUp,
+  BarChart3,
   Download,
   Plus,
   Target,
@@ -209,11 +209,46 @@ const sampleReports: Report[] = [
 ]
 
 export default function TimelinePage() {
-  const [decisions, setDecisions] = useState<Decision[]>(sampleDecisions)
+  const [decisions, setDecisions] = useState<Decision[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [reports] = useState<Report[]>(sampleReports)
   const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null)
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false)
+
+  // Fetch decisions from API
+  useEffect(() => {
+    fetchDecisions()
+  }, [])
+
+  const fetchDecisions = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/decisions', { credentials: 'include' })
+      const result = await response.json()
+      if (result.success && result.data) {
+        // Map API response and add default milestones
+        const mappedData = result.data.map((d: any) => ({
+          id: d.id,
+          judul: d.judul,
+          deskripsi: d.deskripsi,
+          tanggalKeputusan: d.createdAt?.split('T')[0] || '',
+          deadline: d.targetDate,
+          status: d.status,
+          progress: d.progress || 0,
+          kategori: d.kategori,
+          penanggungJawab: d.penanggungJawab,
+          anggaran: 0,
+          milestones: [] // Milestones can be added later
+        }))
+        setDecisions(mappedData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch decisions:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -305,8 +340,8 @@ export default function TimelinePage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="deskripsi">Deskripsi</Label>
-                    <Textarea 
-                      id="deskripsi" 
+                    <Textarea
+                      id="deskripsi"
                       placeholder="Tuliskan deskripsi laporan..."
                       className="min-h-[100px]"
                     />
@@ -403,19 +438,18 @@ export default function TimelinePage() {
                         <span>Progress Keseluruhan</span>
                         <span className="text-muted-foreground">{decision.progress}%</span>
                       </div>
-                      <Progress 
-                        value={decision.progress} 
-                        className={`h-2 ${
-                          decision.progress >= 80 
+                      <Progress
+                        value={decision.progress}
+                        className={`h-2 ${decision.progress >= 80
                             ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                            : decision.progress >= 50 
-                            ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
-                            : decision.progress >= 25
-                            ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                            : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                        }`}
+                            : decision.progress >= 50
+                              ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
+                              : decision.progress >= 25
+                                ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                          }`}
                       />
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Tanggal Keputusan:</span>
@@ -465,18 +499,17 @@ export default function TimelinePage() {
                                     <span>Progress</span>
                                     <span>{milestone.progress}%</span>
                                   </div>
-                                  <Progress 
-                                  value={milestone.progress} 
-                                  className={`h-1 mt-1 ${
-                                    milestone.progress >= 80 
-                                      ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                                      : milestone.progress >= 50 
-                                      ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
-                                      : milestone.progress >= 25
-                                      ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                                      : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                                  }`}
-                                />
+                                  <Progress
+                                    value={milestone.progress}
+                                    className={`h-1 mt-1 ${milestone.progress >= 80
+                                        ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
+                                        : milestone.progress >= 50
+                                          ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
+                                          : milestone.progress >= 25
+                                            ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                            : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                                      }`}
+                                  />
                                 </div>
                               </div>
                             </div>
@@ -485,8 +518,8 @@ export default function TimelinePage() {
                       </div>
 
                       <div className="flex justify-end">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setSelectedDecision(decision)
@@ -522,17 +555,16 @@ export default function TimelinePage() {
                         </div>
                         <span className="text-sm text-muted-foreground">{decision.progress}%</span>
                       </div>
-                      <Progress 
-                      value={decision.progress} 
-                      className={`h-3 ${
-                        decision.progress >= 80 
-                          ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                          : decision.progress >= 50 
-                          ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
-                          : decision.progress >= 25
-                          ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                          : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                        }`}
+                      <Progress
+                        value={decision.progress}
+                        className={`h-3 ${decision.progress >= 80
+                            ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
+                            : decision.progress >= 50
+                              ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
+                              : decision.progress >= 25
+                                ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                          }`}
                       />
                     </div>
                   ))}
@@ -623,7 +655,7 @@ export default function TimelinePage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Deskripsi</Label>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -678,18 +710,17 @@ export default function TimelinePage() {
                             <span>Progress</span>
                             <span>{milestone.progress}%</span>
                           </div>
-                          <Progress 
-                              value={milestone.progress} 
-                              className={`h-1 mt-1 ${
-                                milestone.progress >= 80 
-                                  ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
-                                  : milestone.progress >= 50 
+                          <Progress
+                            value={milestone.progress}
+                            className={`h-1 mt-1 ${milestone.progress >= 80
+                                ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-green-600'
+                                : milestone.progress >= 50
                                   ? '[&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600'
                                   : milestone.progress >= 25
-                                  ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
-                                  : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
-                                }`}
-                            />
+                                    ? '[&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-500'
+                                    : '[&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-red-600'
+                              }`}
+                          />
                         </div>
                       </div>
                     ))}

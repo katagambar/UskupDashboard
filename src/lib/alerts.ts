@@ -8,7 +8,7 @@ export const showSuccess = async (message: string) => {
 
 export const showError = async (message: string) => {
   toast.error(message)
-  console.error('Error:', message)
+  // Removed console.error to prevent Next.js dev overlay
 }
 
 export const showInfo = async (message: string) => {

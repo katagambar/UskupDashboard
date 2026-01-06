@@ -1,141 +1,153 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# Dashboard Keuskupan Surabaya
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+Sistem Informasi Manajemen Terpadu untuk Keuskupan Surabaya, dirancang untuk membantu Uskup dan Kuria dalam pengelolaan administrasi, pastoral, dan pengambilan keputusan berbasis data.
 
-## ✨ Technology Stack
+**Version**: 2.5.0  
+**Last Updated**: 5 Januari 2026
 
-This scaffold provides a robust foundation built with:
+## 📚 Dokumentasi Lengkap
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+| Dokumen | Deskripsi |
+|---------|-----------|
+| [📖 Arsitektur & Database](docs/ARCHITECTURE.md) | Arsitektur sistem dan ERD |
+| [🔌 API Reference](docs/API_DOCUMENTATION.md) | Dokumentasi API endpoints |
+| [🔧 Development Guide](docs/DEVELOPMENT.md) | Panduan pengembangan |
+| [🚀 Deployment Guide](docs/DEPLOYMENT.md) | Panduan deployment production |
+| [📝 Changelog](docs/CHANGELOG.md) | Riwayat perubahan |
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+## 🌟 Fitur Utama
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### 1. Dashboard Eksekutif
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+- Visualisasi data statistik umat, paroki, dan imam
+- Traffic Light Health Indicators
+- Smart Inbox untuk pending actions
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+### 2. Kalender Agenda
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+- Kalender dengan tanggal merah (hari libur Indonesia)
+- Integrasi hari libur nasional 2025-2026
+- Display nama hari libur saat dipilih
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+### 3. AI Theological Assistant (Magisterium AI)
 
-## 🎯 Why This Scaffold?
+- Konsultasi Dokumen Gereja dengan AI
+- Kutipan referensi otomatis
+- Related questions
 
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+### 4. Task Management & Disposisi
+
+- Pengelolaan tugas dengan prioritas dinamis
+- Disposisi surat dan isu strategis
+- Tracking progress real-time
+
+### 5. Digital Signature
+
+- Tanda tangan digital dengan hash SHA-256
+- Verifikasi publik via QR Code
+- Revocation support
+
+### 6. Smart Reporting
+
+- Laporan dari Paroki/Komisi/Kevikepan
+- Traffic Light Status (Baik/Perlu Perhatian/Kritis)
+- Review workflow
+
+## 🛠️ Stack Teknologi
+
+| Layer | Technology |
+|-------|------------|
+| **Framework** | Next.js 16 (App Router, Turbopack) |
+| **Language** | TypeScript |
+| **Styling** | TailwindCSS 4, shadcn/ui |
+| **ORM** | Prisma |
+| **Database** | SQLite (Dev) / PostgreSQL (Prod) |
+| **Auth** | Custom JWT |
+| **Real-time** | Socket.IO |
 
 ## 🚀 Quick Start
 
+### Option 1: Local Development (Recommended)
+
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Start development server
-npm run dev
+# 2. Generate Prisma client
+npx prisma generate
 
-# Build for production
-npm run build
+# 3. Setup database
+npm run db:setup
 
-# Start production server
-npm start
+# 4. Start development server
+npm run dev:local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+Access at: **<http://localhost:3000>**
 
-## 🤖 Powered by Z.ai
+### Option 2: Docker
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+```bash
+# Start dengan Docker
+npm run docker:dev
+```
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+Access at: **<http://localhost:3040>**
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+## 🔐 Test Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| USKUP | <uskup@keuskupan-sby.or.id> | UskupSBY2025! |
+| SEKRETARIS | <sekretaris@keuskupan-sby.or.id> | UskupSBY2025! |
+| VIKJEN | <vikjen@keuskupan-sby.or.id> | UskupSBY2025! |
 
 ## 📁 Project Structure
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/                  # Next.js App Router
+│   ├── api/              # API Routes
+│   ├── agenda/           # Agenda/Calendar
+│   ├── tasks/            # Task Management
+│   ├── surat/            # Surat Menyurat
+│   ├── issues/           # Konsultasi/Issues
+│   └── reports/          # Laporan
+├── components/           # React Components
+│   ├── ui/               # shadcn/ui components
+│   └── ...
+├── hooks/                # Custom React Hooks
+├── lib/                  # Utilities
+│   ├── rbac.ts           # Role-based access control
+│   ├── indonesian-holidays.ts  # Indonesian holidays
+│   └── ...
+└── prisma/               # Database Schema
 ```
 
-## 🎨 Available Features & Components
+## 🔒 Security
 
-This scaffold includes a comprehensive set of modern web development tools:
+- JWT-based authentication
+- Role-Based Access Control (11 roles)
+- Password hashing with bcrypt
+- Input validation with Zod
+- Digital signature verification
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+## 📊 User Roles
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
-
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
-
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
-
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
-
-## 🤝 Get Started with Z.ai
-
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+| Role | Level | Permissions |
+|------|-------|-------------|
+| USKUP | 1 | Full access, final decisions |
+| SEKRETARIS | 2 | Document management, user management |
+| VIKJEN | 3 | Vicar General access |
+| VIKYUD | 4 | Judicial Vicar access |
+| EKONOM | 5 | Financial management |
+| DELEGATUS | 6 | Delegate access |
+| KURIA | 7 | Curia staff access |
+| VIKEP | 8 | Viceprovincial access |
+| KOMISI | 9 | Commission access |
+| PAROKI | 10 | Parish access |
+| STAFF | 11 | Basic staff access |
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+Dikembangkan untuk Keuskupan Surabaya © 2026

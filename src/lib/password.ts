@@ -27,10 +27,16 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   if (!password || !hash) {
+
     return false
   }
 
-  return await bcrypt.compare(password, hash)
+  try {
+    const result = await bcrypt.compare(password, hash)
+    return result
+  } catch (error) {
+    return false
+  }
 }
 
 /**
@@ -41,11 +47,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export function generateSecurePassword(length: number = 12): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
   let password = ''
-  
+
   for (let i = 0; i < length; i++) {
     password += charset.charAt(Math.floor(Math.random() * charset.length))
   }
-  
+
   return password
 }
 
@@ -56,31 +62,31 @@ export function generateSecurePassword(length: number = 12): string {
  */
 export function validatePassword(password: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
-  
+
   if (!password) {
     errors.push('Password is required')
   }
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long')
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter')
   }
-  
+
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter')
   }
-  
+
   if (!/[0-9]/.test(password)) {
     errors.push('Password must contain at least one number')
   }
-  
+
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     errors.push('Password must contain at least one special character')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors

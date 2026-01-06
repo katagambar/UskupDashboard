@@ -45,10 +45,10 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    console.log('🔧 PATCH API CALLED for task:', id)
+
 
     const user = await getCurrentUserFromRequest(request)
-    console.log('User in PATCH:', user)
+
 
     if (!user) {
       console.error('❌ No user found in PATCH request')
@@ -59,13 +59,13 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    console.log('PATCH body:', body)
+
 
     // Handle progress update separately
     if (body.progress !== undefined) {
-      console.log('Updating progress to:', body.progress)
+
       const newStatus = body.progress === 100 ? 'Selesai' :
-                       body.progress > 0 ? 'Dalam Proses' : 'Menunggu'
+        body.progress > 0 ? 'Dalam Proses' : 'Menunggu'
 
       const task = await db.task.update({
         where: { id },
@@ -80,13 +80,13 @@ export async function PATCH(
     }
 
     // Handle general update
-    console.log('Updating task with data:', body)
+
     const task = await db.task.update({
       where: { id },
       data: body
     })
 
-    console.log('✅ Task updated successfully:', task)
+
     return NextResponse.json({ success: true, data: task })
   } catch (error) {
     console.error('❌ Error updating task:', error)

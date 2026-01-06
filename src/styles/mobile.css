@@ -1,0 +1,152 @@
+/**
+ * Mobile Responsive Utilities
+ * 
+ * CSS classes and utilities for mobile-first design
+ */
+
+/* Mobile-first responsive container */
+.mobile-container {
+    @apply px-4 py-4;
+}
+
+@screen md {
+    .mobile-container {
+        @apply px-6 py-6;
+    }
+}
+
+/* Mobile-friendly card grid */
+.mobile-grid {
+    @apply grid gap-4 grid-cols-1;
+}
+
+@screen sm {
+    .mobile-grid {
+        @apply grid-cols-2;
+    }
+}
+
+@screen lg {
+    .mobile-grid {
+        @apply grid-cols-3;
+    }
+}
+
+@screen xl {
+    .mobile-grid {
+        @apply grid-cols-4;
+    }
+}
+
+/* Mobile-friendly stats grid */
+.stats-grid {
+    @apply grid gap-3 grid-cols-2;
+}
+
+@screen md {
+    .stats-grid {
+        @apply grid-cols-4;
+    }
+}
+
+/* Mobile-friendly table wrapper */
+.table-wrapper {
+    @apply -mx-4 overflow-x-auto;
+}
+
+@screen md {
+    .table-wrapper {
+        @apply mx-0;
+    }
+}
+
+/* Mobile-friendly form layout */
+.form-grid {
+    @apply grid gap-4 grid-cols-1;
+}
+
+@screen md {
+    .form-grid {
+        @apply grid-cols-2;
+    }
+}
+
+/* Mobile-friendly button group */
+.button-group {
+    @apply flex flex-col gap-2;
+}
+
+@screen sm {
+    .button-group {
+        @apply flex-row;
+    }
+}
+
+/* Touch-friendly targets */
+.touch-target {
+    @apply min-h-[44px] min-w-[44px];
+}
+
+/* Mobile navigation bottom bar (optional) */
+.mobile-bottom-bar {
+    @apply fixed bottom-0 left-0 right-0 h-16 bg-background border-t flex items-center justify-around md:hidden z-50;
+}
+
+/* Safe area padding for notched devices */
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Hide scrollbar on mobile - with browser compatibility */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+/* Modern browsers that support scrollbar-width */
+@supports (scrollbar-width: none) {
+    .hide-scrollbar {
+        scrollbar-width: none;
+    }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+/* Pull-to-refresh container */
+.pull-refresh {
+    @apply overflow-y-auto overscroll-contain;
+}
+
+/* Swipeable card */
+.swipeable {
+    touch-action: pan-x;
+}
+
+/* Mobile-optimized text */
+.mobile-text-sm {
+    @apply text-sm;
+}
+
+@screen md {
+    .mobile-text-sm {
+        @apply text-base;
+    }
+}
+
+/* Truncate text with ellipsis */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
