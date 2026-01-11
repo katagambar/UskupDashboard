@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, notFoundResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get single notulensi by ID
 export async function GET(
@@ -29,50 +29,30 @@ export async function GET(
     })
 
     if (!notulensi) {
-      return NextResponse.json(
-        { success: false, error: 'Notulensi not found' },
-        { status: 404 }
-      )
+      return notFoundResponse('Notulensi')
     }
 
-    return NextResponse.json({ success: true, data: notulensi })
+    return successResponse(notulensi)
   } catch (error) {
     console.error('Error fetching notulensi:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch notulensi' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch notulensi')
   }
 }
 
-// Update notulensi by ID
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Update notulensi by ID - using withAuth wrapper
+export const PATCH = withAuth(async (request, user, context) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context?.params as { id: string }
     const body = await request.json()
     const { judul, tanggal, jenis, peserta, isi, kesimpulan, status } = body
 
-    // Check if notulensi exists and user has permission
+    // Check if notulensi exists
     const existingNotulensi = await db.notulensi.findUnique({
       where: { id }
     })
 
     if (!existingNotulensi) {
-      return NextResponse.json(
-        { success: false, error: 'Notulensi not found' },
-        { status: 404 }
-      )
+      return notFoundResponse('Notulensi')
     }
 
     const updateData: any = {}
@@ -105,31 +85,17 @@ export async function PATCH(
       }
     })
 
-    return NextResponse.json({ success: true, data: notulensi })
+    return successResponse(notulensi)
   } catch (error) {
     console.error('Error updating notulensi:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to update notulensi' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to update notulensi')
   }
-}
+})
 
-// Delete notulensi by ID
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Delete notulensi by ID - using withAuth wrapper
+export const DELETE = withAuth(async (request, user, context) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context?.params as { id: string }
 
     // Check if notulensi exists
     const existingNotulensi = await db.notulensi.findUnique({
@@ -137,22 +103,16 @@ export async function DELETE(
     })
 
     if (!existingNotulensi) {
-      return NextResponse.json(
-        { success: false, error: 'Notulensi not found' },
-        { status: 404 }
-      )
+      return notFoundResponse('Notulensi')
     }
 
     await db.notulensi.delete({
       where: { id }
     })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ deleted: true })
   } catch (error) {
     console.error('Error deleting notulensi:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete notulensi' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to delete notulensi')
   }
-}
+})

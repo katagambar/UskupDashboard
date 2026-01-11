@@ -11,13 +11,14 @@ import { Button } from "@/components/ui/button"
 import { CalendarDays, CheckCircle, Clock, FileText, Users, AlertCircle, TrendingUp, Target, BarChart3, ArrowUp, ArrowDown } from "lucide-react"
 import { showError } from "@/lib/alerts"
 import { getTimeGreeting, formatDate, getDateString, DateRanges, isWithinRange } from "@/lib/dateUtils"
+import type { AgendaItem, TaskItem, NotulensiItem, ImamItem, DecisionItem } from "@/types"
 
 interface DashboardData {
-  agenda: any[]
-  tasks: any[]
-  notulensi: any[]
-  imam: any[]
-  decisions: any[]
+  agenda: AgendaItem[]
+  tasks: TaskItem[]
+  notulensi: NotulensiItem[]
+  imam: ImamItem[]
+  decisions: DecisionItem[]
 }
 
 export default function Dashboard() {
@@ -109,7 +110,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard Uskup Surabaya</h1>
           <p className="text-muted-foreground">
-            {getTimeGreeting()}, Mgr. Agustinus Tri Budi Utomo
+            {getTimeGreeting()}, {user?.name || 'Pengguna'}
           </p>
         </div>
 
@@ -229,7 +230,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4 rounded-md border p-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -243,7 +244,7 @@ export default function Dashboard() {
                 <Badge variant="secondary">Kuria</Badge>
               </div>
               <div className="flex items-center space-x-4 rounded-md border p-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -257,7 +258,7 @@ export default function Dashboard() {
                 <Badge variant="outline">Pastoral</Badge>
               </div>
               <div className="flex items-center space-x-4 rounded-md border p-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">

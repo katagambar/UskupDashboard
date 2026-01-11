@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-options'
+import { getCurrentUserFromRequest } from '@/lib/custom-auth'
 import { prisma } from '@/lib/db'
-import { hashPassword, validatePassword, generateSecurePassword } from '@/lib/password'
+import { hashPassword, validatePassword, generateSecurePassword, verifyPassword } from '@/lib/password'
 
 /**
  * Password management API endpoints
@@ -13,9 +12,9 @@ import { hashPassword, validatePassword, generateSecurePassword } from '@/lib/pa
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const currentUser = await getCurrentUserFromRequest(request)
     
-    if (!session?.user?.id) {
+    if (!currentUser?.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -23,10 +22,10 @@ export async function GET(request: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: currentUser.id },
       select: {
         passwordSet: true,
-        password: true, // Will be null if not set
+        password: true,
         updatedAt: true
       }
     })
@@ -56,9 +55,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const currentUser = await getCurrentUserFromRequest(request)
     
-    if (!session?.user?.id) {
+    if (!currentUser?.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: currentUser.id },
       select: {
         password: true,
         passwordSet: true
@@ -112,7 +111,6 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const { verifyPassword } = await import('@/lib/password')
       const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password)
       
       if (!isCurrentPasswordValid) {
@@ -128,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     // Update user password
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: currentUser.id },
       data: {
         password: hashedPassword,
         passwordSet: true
@@ -155,9 +153,9 @@ export async function POST(request: NextRequest) {
 // Generate secure password for initial setup (admin only)
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const currentUser = await getCurrentUserFromRequest(request)
     
-    if (!session?.user?.id) {
+    if (!currentUser?.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -165,7 +163,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Only allow for admin/bishop users
-    if (session.user.role !== 'bishop' && session.user.role !== 'admin') {
+    if (currentUser.role !== 'USKUP' && currentUser.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -180,7 +178,7 @@ export async function PUT(request: NextRequest) {
 
     // Update user password
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: currentUser.id },
       data: {
         password: hashedPassword,
         passwordSet: true

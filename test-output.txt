@@ -1,0 +1,45 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mD:/@workspace/DashboardUskup[39m
+
+ [31mΓ¥»[39m src/test/validation.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 15[2mms[22m[39m
+       [32mΓ£ô[39m should accept valid date format YYYY-MM-DD[32m 2[2mms[22m[39m
+       [32mΓ£ô[39m should reject invalid date formats[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m should accept valid time format HH:MM[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject invalid time formats[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m should accept valid agenda data[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m should accept optional fields as null or undefined[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject missing required fields[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject empty strings for required fields[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject invalid date format[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should allow partial updates[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m should allow status field[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should accept valid task data[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject missing fields[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should accept valid issue with enum priority[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m should use MEDIUM as default priority[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should reject invalid priority[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should return success true for valid data[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should return success false with error for invalid data[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m should format errors as readable string[39m[32m 4[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/test/validation.test.ts > Validation Schemas > formatZodErrors helper > should format errors as readable string
+TypeError: Cannot read properties of undefined (reading 'map')
+ Γ¥» formatZodErrors src/lib/validation-schemas.ts:176:23
+    174|  */
+    175| export function formatZodErrors(error: z.ZodError): string {
+    176|   return error.errors.map(e => `${e.path.join('.')}: ${e.message}`).joΓÇª
+       |                       ^
+    177| }
+    178| 
+ Γ¥» src/test/validation.test.ts:194:27
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m18 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 16:52:09
+[2m   Duration [22m 2.22s[2m (transform 69ms, setup 234ms, import 120ms, tests 15ms, environment 1.58s)[22m
+

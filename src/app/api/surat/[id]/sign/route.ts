@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getCurrentUserFromRequest } from '@/lib/custom-auth'
 import { signDocument } from '@/lib/digital-signature'
 import { canApproveDocuments, getRoleDisplayName } from '@/lib/rbac'
 import { prisma } from '@/lib/db'
@@ -16,9 +15,9 @@ export async function POST(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions)
+        const currentUser = await getCurrentUserFromRequest(request)
 
-        if (!session?.user?.id) {
+        if (!currentUser?.id) {
             return NextResponse.json(
                 { success: false, error: 'Tidak terautentikasi' },
                 { status: 401 }
@@ -27,7 +26,7 @@ export async function POST(
 
         // Get user with role
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id }
+            where: { id: currentUser.id }
         })
 
         if (!user) {

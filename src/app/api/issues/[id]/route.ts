@@ -6,93 +6,57 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
 import { getIssueById, updateIssueStatus, openForConsultation } from '@/lib/issue-service'
+import { withAuth, notFoundResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+// GET - Get issue by ID (requires auth)
+export const GET = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
+    const issue = await getIssueById(id)
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
-
-        const { id } = await params
-        const issue = await getIssueById(id)
-
-        if (!issue) {
-            return NextResponse.json(
-                { success: false, error: 'Isu tidak ditemukan' },
-                { status: 404 }
-            )
-        }
-
-        return NextResponse.json({
-            success: true,
-            data: issue
-        })
-
-    } catch (error) {
-        console.error('Get issue error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Gagal mengambil detail isu' },
-            { status: 500 }
-        )
+    if (!issue) {
+      return notFoundResponse('Isu')
     }
-}
 
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+    return NextResponse.json({
+      success: true,
+      data: issue
+    })
+  } catch (error) {
+    console.error('Get issue error:', error)
+    return serverErrorResponse('Gagal mengambil detail isu')
+  }
+})
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
+// PUT - Update issue (requires auth)
+export const PUT = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
+    const body = await request.json()
+    const { status, consultantIds } = body
 
-        const { id } = await params
-        const body = await request.json()
-        const { status, consultantIds } = body
-
-        // If opening for consultation
-        if (status === 'OPEN' && consultantIds) {
-            await openForConsultation(id, consultantIds)
-            return NextResponse.json({
-                success: true,
-                message: 'Isu dibuka untuk konsultasi'
-            })
-        }
-
-        // Simple status update
-        if (status) {
-            const updated = await updateIssueStatus(id, status)
-            return NextResponse.json({
-                success: true,
-                data: updated
-            })
-        }
-
-        return NextResponse.json(
-            { success: false, error: 'Tidak ada perubahan yang valid' },
-            { status: 400 }
-        )
-
-    } catch (error) {
-        console.error('Update issue error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Gagal mengupdate isu' },
-            { status: 500 }
-        )
+    // If opening for consultation
+    if (status === 'OPEN' && consultantIds) {
+      await openForConsultation(id, consultantIds)
+      return NextResponse.json({
+        success: true,
+        message: 'Isu dibuka untuk konsultasi'
+      })
     }
-}
+
+    // Simple status update
+    if (status) {
+      const updated = await updateIssueStatus(id, status)
+      return NextResponse.json({
+        success: true,
+        data: updated
+      })
+    }
+
+    return errorResponse('Tidak ada perubahan yang valid')
+  } catch (error) {
+    console.error('Update issue error:', error)
+    return serverErrorResponse('Gagal mengupdate isu')
+  }
+})

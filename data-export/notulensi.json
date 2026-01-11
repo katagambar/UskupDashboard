@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cmk2h3nyp002rvpl85f7aqc82",
+    "judul": "Rapat Kuria Bulanan Januari 2025",
+    "tanggal": "2025-01-10",
+    "jenis": "Kuria",
+    "peserta": "12 orang",
+    "status": "Disetujui",
+    "isi": "Diskusi tentang program kerja bulan Januari...",
+    "kesimpulan": "Disetujui untuk dilaksanakan sesuai rencana",
+    "lampiran": null,
+    "createdAt": "2026-01-06T10:55:13.681Z",
+    "updatedAt": "2026-01-06T10:55:13.681Z",
+    "approvedAt": null,
+    "approvedBy": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp",
+    "agendaId": null
+  },
+  {
+    "id": "cmk2h3nzq002tvpl84mzyeyk0",
+    "judul": "Pertemuan Komisi Pendidikan",
+    "tanggal": "2025-01-08",
+    "jenis": "Komisi",
+    "peserta": "8 orang",
+    "status": "Draft",
+    "isi": "Pembahasan kurikulum pendidikan agama...",
+    "kesimpulan": null,
+    "lampiran": null,
+    "createdAt": "2026-01-06T10:55:13.718Z",
+    "updatedAt": "2026-01-06T10:55:13.718Z",
+    "approvedAt": null,
+    "approvedBy": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp",
+    "agendaId": null
+  }
+]

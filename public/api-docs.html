@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation - Dashboard Uskup Surabaya</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+  <link rel="icon" href="/icons/icon-72x72.png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .swagger-ui .topbar {
+      background-color: #0F4C81;
+    }
+    .swagger-ui .topbar .download-url-wrapper {
+      display: none;
+    }
+    .swagger-ui .info .title {
+      color: #0F4C81;
+    }
+    .swagger-ui .info hgroup.main a {
+      display: none;
+    }
+    .swagger-ui .opblock.opblock-get .opblock-summary-method {
+      background: #0F4C81;
+    }
+    .swagger-ui .opblock.opblock-post .opblock-summary-method {
+      background: #49cc90;
+    }
+    .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+      background: #f93e3e;
+    }
+    .swagger-ui .btn.authorize {
+      border-color: #0F4C81;
+      color: #0F4C81;
+    }
+    .swagger-ui .btn.authorize svg {
+      fill: #0F4C81;
+    }
+    #header {
+      background-color: #0F4C81;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    #header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    #header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+    #header a {
+      color: white;
+      text-decoration: none;
+      margin-left: auto;
+      opacity: 0.8;
+    }
+    #header a:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <img src="/logo-keuskupan.jpg" alt="Logo">
+    <h1>Dashboard Uskup API Documentation</h1>
+    <a href="/">← Kembali ke Dashboard</a>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = function() {
+      window.ui = SwaggerUIBundle({
+        url: '/openapi.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: 'BaseLayout',
+        docExpansion: 'list',
+        filter: true,
+        showExtensions: true,
+        showCommonExtensions: true
+      });
+    };
+  </script>
+</body>
+</html>

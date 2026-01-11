@@ -68,32 +68,27 @@ interface BishopProfile {
   totalKeputusanPenting: number
 }
 
+// Default profile with empty values - data will be fetched from database
 const defaultProfile: BishopProfile = {
-  namaLengkap: "Mgr. Agustinus Tri Budi Utomo",
-  gelar: "Uskup Keuskupan Surabaya",
-  tanggalLahir: "1960-07-10",
-  tempatLahir: "Surabaya",
+  namaLengkap: "",
+  gelar: "",
+  tanggalLahir: "",
+  tempatLahir: "",
   foto: "",
-  email: "uskup@keuskupansurabaya.org",
-  telepon: "+62 31 531 1234",
-  alamat: "Jl. Johar No. 33, Surabaya 60241",
-  website: "www.keuskupansurabaya.org",
+  email: "",
+  telepon: "",
+  alamat: "",
+  website: "",
   namaKeuskupan: "Keuskupan Surabaya",
-  tanggalTahbisanUskup: "2007-07-10",
-  jumlahParoki: 42,
-  jumlahUmat: "± 150,000 jiwa",
-  pendidikan: [
-    { id: "1", degree: "S2 Teologi", institution: "Universitas Katolik Indonesia Atma Jaya", year: "1995 - 1998" },
-    { id: "2", degree: "S1 Teologi", institution: "STFD Antonius Surabaya", year: "1990 - 1995" }
-  ],
-  pengalaman: [
-    { id: "1", title: "Uskup Keuskupan Surabaya", organization: "Keuskupan Surabaya", period: "2007 - Sekarang" },
-    { id: "2", title: "Pastor Paroki Santo Paulus", organization: "Paroki Santo Paulus Surabaya", period: "2000 - 2007" }
-  ],
-  totalPertemuanKuria: 24,
-  totalPastoralVisitasi: 18,
-  totalSuratEdaran: 12,
-  totalKeputusanPenting: 8
+  tanggalTahbisanUskup: "",
+  jumlahParoki: 0,
+  jumlahUmat: "",
+  pendidikan: [],
+  pengalaman: [],
+  totalPertemuanKuria: 0,
+  totalPastoralVisitasi: 0,
+  totalSuratEdaran: 0,
+  totalKeputusanPenting: 0
 }
 
 export default function ProfilPage() {

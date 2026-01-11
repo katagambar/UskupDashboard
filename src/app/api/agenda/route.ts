@@ -10,21 +10,33 @@ import {
   createNotFoundError,
   generateRequestId 
 } from '@/lib/errorHandler'
+import { parsePaginationParams, createPaginatedResponse, getPrismaPageOptions } from '@/lib/pagination'
+import { withRateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
+import { createAgendaSchema, validateInput, formatZodErrors } from '@/lib/validation-schemas'
 
-// Get all agenda or filter by query
+// Get all agenda or filter by query (with pagination)
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  // Rate limiting check
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   const { searchParams } = new URL(request.url)
   const jenis = searchParams.get('jenis')
   const status = searchParams.get('status')
   const search = searchParams.get('search')
+  const all = searchParams.get('all') === 'true' // Skip pagination if ?all=true
 
+  // Parse pagination params
+  const paginationParams = parsePaginationParams(request)
+
+  // Build where clause with filters
   const where: any = {}
   
-  if (jenis && jenis !== 'semua') {
+  if (jenis) { // Changed from `jenis && jenis !== 'semua'`
     where.jenis = jenis
   }
   
-  if (status && status !== 'semua') {
+  if (status) { // Changed from `status && status !== 'semua'`
     where.status = status
   }
   
@@ -32,16 +44,21 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     where.OR = [
       { judul: { contains: search, mode: 'insensitive' } },
       { lokasi: { contains: search, mode: 'insensitive' } },
-      { deskripsi: { contains: search, mode: 'insensitive' } }
+      { peserta: { contains: search, mode: 'insensitive' } } // Changed 'deskripsi' to 'peserta' and added mode: 'insensitive'
     ]
   }
 
   try {
+    // Get total count for pagination
+    const total = await prisma.agenda.count({ where })
+
+    // Fetch data with pagination (skip if ?all=true for backward compatibility)
     const agenda = await prisma.agenda.findMany({
       where,
       include: {
         creator: {
           select: {
+            id: true,
             name: true,
             email: true
           }
@@ -49,10 +66,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       },
       orderBy: {
         tanggal: 'desc'
-      }
+      },
+      ...(all ? {} : getPrismaPageOptions(paginationParams))
     })
 
-    return createSuccessResponse(agenda, 'Agenda retrieved successfully')
+    // Add rate limit headers
+    const headers = getRateLimitHeaders(request)
+
+    // Return paginated or simple response
+    if (all) {
+      return NextResponse.json(
+        { success: true, data: agenda },
+        { headers }
+      )
+    }
+
+    return NextResponse.json(
+      createPaginatedResponse(agenda, total, paginationParams),
+      { headers }
+    )
   } catch (error) {
     const appError = handlePrismaError(error, 'GET /api/agenda')
     
@@ -62,6 +94,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     )
   }
 }, 'GET /api/agenda')
+
 
 // Create new agenda
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -74,26 +107,27 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   const body = await request.json()
-  const { judul, tanggal, waktu, lokasi, jenis, peserta, deskripsi } = body
-
-  // Validation
-  const requiredFields = ['judul', 'tanggal', 'waktu', 'lokasi', 'jenis', 'peserta']
-  for (const field of requiredFields) {
-    if (!body[field]) {
-      const validationError = createValidationError(field, 'Field is required')
-      return NextResponse.json(
-        { success: false, error: validationError },
-        { status: 400 }
-      )
-    }
+  
+  // Validate with Zod schema
+  const validation = validateInput(createAgendaSchema, body)
+  if (!validation.success) {
+    return NextResponse.json(
+      { success: false, error: { code: 'VALIDATION_ERROR', message: formatZodErrors(validation.error) } },
+      { status: 400 }
+    )
   }
+
+  const { judul, tanggal, tanggalAkhir, waktu, waktuAkhir, lokasi, jenis, peserta, deskripsi } = validation.data
+
 
   try {
     const agenda = await prisma.agenda.create({
       data: {
         judul,
         tanggal,
+        tanggalAkhir: tanggalAkhir || null,
         waktu,
+        waktuAkhir: waktuAkhir || null,
         lokasi,
         jenis,
         peserta,

@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { parsePaginationParams, createPaginatedResponse, getPrismaPageOptions } from '@/lib/pagination'
+import { withRateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
+import { createTaskSchema, validateInput, formatZodErrors } from '@/lib/validation-schemas'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-// Get all tasks or filter by query
+
+// Get all tasks or filter by query (with pagination)
 export async function GET(request: NextRequest) {
+  // Rate limiting check
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { searchParams } = new URL(request.url)
     const prioritas = searchParams.get('prioritas')
     const status = searchParams.get('status')
     const kategori = searchParams.get('kategori')
     const search = searchParams.get('search')
+    const all = searchParams.get('all') === 'true'
+
+    const paginationParams = parsePaginationParams(request)
 
     const where: any = {}
     
@@ -32,11 +43,14 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    const total = await db.task.count({ where })
+
     const tasks = await db.task.findMany({
       where,
       include: {
         creator: {
           select: {
+            id: true,
             name: true,
             email: true
           }
@@ -44,39 +58,39 @@ export async function GET(request: NextRequest) {
       },
       orderBy: [
         { createdAt: 'desc' }
-      ]
+      ],
+      ...(all ? {} : getPrismaPageOptions(paginationParams))
     })
 
-    return NextResponse.json({ success: true, data: tasks })
+    const headers = getRateLimitHeaders(request)
+
+    if (all) {
+      return NextResponse.json({ success: true, data: tasks }, { headers })
+    }
+
+    return NextResponse.json(
+      createPaginatedResponse(tasks, total, paginationParams),
+      { headers }
+    )
   } catch (error) {
     console.error('Error fetching tasks:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch tasks' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch tasks')
   }
 }
 
-// Create new task
-export async function POST(request: NextRequest) {
+
+// Create new task - using withAuth wrapper for clean authentication
+export const POST = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
-    const { judul, deskripsi, prioritas, deadline, kategori, penanggungJawab } = body
-
-    if (!judul || !deskripsi || !prioritas || !deadline || !kategori || !penanggungJawab) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
+    
+    // Validate with Zod schema
+    const validation = validateInput(createTaskSchema, body)
+    if (!validation.success) {
+      return errorResponse(formatZodErrors(validation.error))
     }
+
+    const { judul, deskripsi, prioritas, deadline, kategori, penanggungJawab } = validation.data
 
     const task = await db.task.create({
       data: {
@@ -92,12 +106,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: task }, { status: 201 })
+    return successResponse(task, 201)
   } catch (error) {
     console.error('Error creating task:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to create task' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to create task')
   }
-}
+})
+

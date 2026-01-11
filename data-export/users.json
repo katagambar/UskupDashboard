@@ -1,0 +1,72 @@
+[
+  {
+    "id": "cmk2h3mcv0000vpl817dflvvp",
+    "email": "uskup@keuskupan-sby.or.id",
+    "name": "Mgr. Vincentius Sutikno Wisaksono",
+    "role": "USKUP",
+    "jabatan": "Uskup Keuskupan Surabaya",
+    "department": null,
+    "canApprove": true,
+    "signatureUrl": null,
+    "password": "$2a$12$XgnhLqOYpXMC1Eqwtk4Dzu9OnAEs08MUFNQuoDCAiGhleEzi2Bz.G",
+    "passwordSet": true,
+    "createdAt": "2026-01-06T10:55:11.593Z",
+    "updatedAt": "2026-01-06T10:55:11.593Z"
+  },
+  {
+    "id": "cmk2h3mfd0001vpl8ghm6s5hl",
+    "email": "sekretaris@keuskupan-sby.or.id",
+    "name": "Rm. Yohanes Antonius",
+    "role": "SEKRETARIS",
+    "jabatan": "Sekretaris Uskup",
+    "department": null,
+    "canApprove": false,
+    "signatureUrl": null,
+    "password": "$2a$12$XgnhLqOYpXMC1Eqwtk4Dzu9OnAEs08MUFNQuoDCAiGhleEzi2Bz.G",
+    "passwordSet": true,
+    "createdAt": "2026-01-06T10:55:11.689Z",
+    "updatedAt": "2026-01-06T10:55:11.689Z"
+  },
+  {
+    "id": "cmk2h3mg30002vpl8vrjrvfjx",
+    "email": "vikjen@keuskupan-sby.or.id",
+    "name": "Rm. Petrus Canisius",
+    "role": "VIKJEN",
+    "jabatan": "Vikaris Jenderal",
+    "department": null,
+    "canApprove": true,
+    "signatureUrl": null,
+    "password": "$2a$12$XgnhLqOYpXMC1Eqwtk4Dzu9OnAEs08MUFNQuoDCAiGhleEzi2Bz.G",
+    "passwordSet": true,
+    "createdAt": "2026-01-06T10:55:11.715Z",
+    "updatedAt": "2026-01-06T10:55:11.715Z"
+  },
+  {
+    "id": "cmk2h3mgt0003vpl8v1xz6uwn",
+    "email": "ekonom@keuskupan-sby.or.id",
+    "name": "Rm. Markus Budiman",
+    "role": "EKONOM",
+    "jabatan": "Ekonom Keuskupan",
+    "department": "Keuangan",
+    "canApprove": false,
+    "signatureUrl": null,
+    "password": "$2a$12$XgnhLqOYpXMC1Eqwtk4Dzu9OnAEs08MUFNQuoDCAiGhleEzi2Bz.G",
+    "passwordSet": true,
+    "createdAt": "2026-01-06T10:55:11.742Z",
+    "updatedAt": "2026-01-06T10:55:11.742Z"
+  },
+  {
+    "id": "cmk2h3mhr0004vpl85y4cep2l",
+    "email": "vikyud@keuskupan-sby.or.id",
+    "name": "Rm. Thomas Aquinas",
+    "role": "VIKYUD",
+    "jabatan": "Vikaris Yudisial",
+    "department": "Tribunal",
+    "canApprove": false,
+    "signatureUrl": null,
+    "password": "$2a$12$XgnhLqOYpXMC1Eqwtk4Dzu9OnAEs08MUFNQuoDCAiGhleEzi2Bz.G",
+    "passwordSet": true,
+    "createdAt": "2026-01-06T10:55:11.776Z",
+    "updatedAt": "2026-01-06T10:55:11.776Z"
+  }
+]

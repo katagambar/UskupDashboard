@@ -347,6 +347,40 @@ Create a new surat.
 
 **Response:** `201 Created`
 
+### GET /api/surat/[id]/pdf
+
+Download surat as PDF (Ready to print).
+**Note:** The letterhead (Kop Surat) is dynamically generated based on `CONFIG_KOP` parameters in Master Data.
+
+**Response:** `200 OK` (Content-Type: application/pdf)
+
+### GET /api/surat/[id]/word
+
+Download surat as Word Document (.docx) for editing.
+**Note:** The letterhead (Kop Surat) is dynamically generated based on `CONFIG_KOP` parameters in Master Data.
+
+**Response:** `200 OK` (Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+
+### POST /api/upload
+
+Upload file attachment to Google Drive.
+
+**Headers:** `Content-Type: multipart/form-data`
+**Body:** form-data with `file` field.
+
+**Response:** `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "fileId": "1a2b3c...",
+    "webViewLink": "https://drive.google.com/...",
+    "webContentLink": "https://drive.google.com/..."
+  }
+}
+```
+
 ---
 
 ## 🏛️ Decisions API
@@ -732,7 +766,9 @@ Notify about data changes.
   "type": "agenda",
   "action": "create",
   "recordId": "agenda_123",
-  "data": { /* agenda data */ }
+  "data": {
+    /* agenda data */
+  }
 }
 ```
 
@@ -755,10 +791,7 @@ Sent when connection is established.
   "message": "Welcome to Dashboard Uskup Surabaya Real-time System!",
   "socketId": "socket_123",
   "timestamp": "2025-11-09T03:15:10.000Z",
-  "features": [
-    "Real-time notifications",
-    "Live data updates"
-  ]
+  "features": ["Real-time notifications", "Live data updates"]
 }
 ```
 
@@ -796,7 +829,9 @@ Data has been updated by another user.
   "type": "agenda",
   "action": "create",
   "recordId": "agenda_123",
-  "data": { /* agenda data */ },
+  "data": {
+    /* agenda data */
+  },
   "timestamp": "2025-11-09T03:15:10.000Z"
 }
 ```
@@ -805,18 +840,18 @@ Data has been updated by another user.
 
 ## 🛡️ Error Codes
 
-| Code | Description | HTTP Status |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | Input validation failed | 400 |
-| `AUTH_ERROR` | Authentication required | 401 |
-| `AUTHZ_ERROR` | Access forbidden | 403 |
-| `NOT_FOUND` | Resource not found | 404 |
-| `CONFLICT_ERROR` | Resource already exists | 409 |
-| `DATABASE_ERROR` | Database operation failed | 500 |
-| `INTERNAL_ERROR` | Internal server error | 500 |
-| `EXTERNAL_API_ERROR` | External service error | 503 |
-| `RATE_LIMIT_ERROR` | Too many requests | 429 |
-| `NETWORK_ERROR` | Network connectivity issue | 503 |
+| Code                 | Description                | HTTP Status |
+| -------------------- | -------------------------- | ----------- |
+| `VALIDATION_ERROR`   | Input validation failed    | 400         |
+| `AUTH_ERROR`         | Authentication required    | 401         |
+| `AUTHZ_ERROR`        | Access forbidden           | 403         |
+| `NOT_FOUND`          | Resource not found         | 404         |
+| `CONFLICT_ERROR`     | Resource already exists    | 409         |
+| `DATABASE_ERROR`     | Database operation failed  | 500         |
+| `INTERNAL_ERROR`     | Internal server error      | 500         |
+| `EXTERNAL_API_ERROR` | External service error     | 503         |
+| `RATE_LIMIT_ERROR`   | Too many requests          | 429         |
+| `NETWORK_ERROR`      | Network connectivity issue | 503         |
 
 ---
 
@@ -838,4 +873,4 @@ For API support and questions:
 
 ---
 
-*Last updated: November 9, 2025*
+_Last updated: November 9, 2025_

@@ -1,0 +1,384 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Dashboard Uskup Surabaya API",
+    "description": "REST API for Diocese of Surabaya Dashboard Application.\n\n## Authentication\nAll endpoints (except `/api/auth/login`) require JWT authentication. Include the token in cookies or Authorization header.\n\n## Roles\n- **USKUP**: Full access to all features\n- **VIKJEN**: High-level administrative access\n- **SEKRETARIS**: Document and scheduling management\n- **STAF**: Limited access to basic features\n- **VIEWER**: Read-only access",
+    "version": "2.9.4",
+    "contact": {
+      "name": "Keuskupan Surabaya",
+      "email": "admin@keuskupan-surabaya.org"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3053",
+      "description": "Development server"
+    },
+    {
+      "url": "https://dashboard.keuskupan-surabaya.org",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Authentication endpoints" },
+    { "name": "Agenda", "description": "Schedule and calendar management" },
+    { "name": "Tasks", "description": "Task management" },
+    { "name": "Surat", "description": "Document/letter management" },
+    { "name": "Users", "description": "User management" },
+    { "name": "Analytics", "description": "Usage statistics" },
+    { "name": "Push", "description": "Push notifications" }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "description": "Authenticate user and get JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "rememberMe": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Clear authentication tokens",
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Request password reset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Reset email sent (if email exists)" }
+        }
+      }
+    },
+    "/api/auth/2fa": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get 2FA status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "2FA status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": { "type": "boolean" },
+                    "backupCodesRemaining": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Setup/manage 2FA",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["setup", "verify", "disable", "regenerate-backup"] },
+                  "code": { "type": "string", "description": "6-digit TOTP code" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Action completed" }
+        }
+      }
+    },
+    "/api/agenda": {
+      "get": {
+        "tags": ["Agenda"],
+        "summary": "List agenda items",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of agenda items" }
+        }
+      },
+      "post": {
+        "tags": ["Agenda"],
+        "summary": "Create agenda item",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AgendaInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Agenda created" }
+        }
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "List tasks",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of tasks" }
+        }
+      },
+      "post": {
+        "tags": ["Tasks"],
+        "summary": "Create task",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TaskInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Task created" }
+        }
+      }
+    },
+    "/api/surat": {
+      "get": {
+        "tags": ["Surat"],
+        "summary": "List surat/documents",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of surat" }
+        }
+      },
+      "post": {
+        "tags": ["Surat"],
+        "summary": "Create surat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SuratInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Surat created" }
+        }
+      }
+    },
+    "/api/surat/numbering": {
+      "get": {
+        "tags": ["Surat"],
+        "summary": "Get surat numbering",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "schema": { "type": "string", "enum": ["generate", "options", "stats"] } },
+          { "name": "jenis", "in": "query", "schema": { "type": "string" } },
+          { "name": "unit", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Numbering data" }
+        }
+      }
+    },
+    "/api/user/sessions": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "List active sessions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of active sessions" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Revoke session",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "query", "schema": { "type": "string" } },
+          { "name": "all", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": {
+          "200": { "description": "Session revoked" }
+        }
+      }
+    },
+    "/api/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get usage analytics",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["3m", "6m", "1y"] } }
+        ],
+        "responses": {
+          "200": { "description": "Analytics data" }
+        }
+      }
+    },
+    "/api/push/subscribe": {
+      "get": {
+        "tags": ["Push"],
+        "summary": "Get VAPID public key",
+        "responses": {
+          "200": { "description": "VAPID public key for subscription" }
+        }
+      },
+      "post": {
+        "tags": ["Push"],
+        "summary": "Subscribe to push notifications",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PushSubscription" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subscribed" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "email": { "type": "string" },
+              "name": { "type": "string" },
+              "role": { "type": "string" }
+            }
+          }
+        }
+      },
+      "AgendaInput": {
+        "type": "object",
+        "required": ["judul", "tanggal"],
+        "properties": {
+          "judul": { "type": "string", "minLength": 3 },
+          "tanggal": { "type": "string", "format": "date" },
+          "waktuMulai": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+          "waktuSelesai": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+          "lokasi": { "type": "string" },
+          "deskripsi": { "type": "string" }
+        }
+      },
+      "TaskInput": {
+        "type": "object",
+        "required": ["judul"],
+        "properties": {
+          "judul": { "type": "string" },
+          "deskripsi": { "type": "string" },
+          "prioritas": { "type": "string", "enum": ["RENDAH", "SEDANG", "TINGGI", "URGENT"] },
+          "deadline": { "type": "string", "format": "date" },
+          "assigneeId": { "type": "string" }
+        }
+      },
+      "SuratInput": {
+        "type": "object",
+        "required": ["nomor", "jenis", "perihal"],
+        "properties": {
+          "nomor": { "type": "string" },
+          "jenis": { "type": "string" },
+          "perihal": { "type": "string" },
+          "tanggal": { "type": "string", "format": "date" },
+          "tujuan": { "type": "string" }
+        }
+      },
+      "PushSubscription": {
+        "type": "object",
+        "required": ["subscription"],
+        "properties": {
+          "subscription": {
+            "type": "object",
+            "properties": {
+              "endpoint": { "type": "string" },
+              "keys": {
+                "type": "object",
+                "properties": {
+                  "p256dh": { "type": "string" },
+                  "auth": { "type": "string" }
+                }
+              }
+            }
+          },
+          "action": { "type": "string", "enum": ["subscribe", "unsubscribe"] }
+        }
+      }
+    }
+  }
+}

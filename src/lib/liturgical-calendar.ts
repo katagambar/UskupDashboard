@@ -18,9 +18,19 @@ const BASE_URL = 'https://litcal.johnromanodorazio.com/api/v5/calendar'
 export async function getLiturgicalCalendar(year: number): Promise<LiturgicalEvent[]> {
     try {
         console.log(`Fetching liturgical calendar for year ${year}...`)
-        const response = await fetch(`${BASE_URL}/${year}`)
+        
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
+        const response = await fetch(`${BASE_URL}/${year}`, {
+            signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        
         if (!response.ok) {
-            throw new Error('Failed to fetch liturgical calendar')
+            console.warn(`Liturgical calendar API returned ${response.status}`)
+            return []
         }
         const data = await response.json()
 
@@ -40,11 +50,17 @@ export async function getLiturgicalCalendar(year: number): Promise<LiturgicalEve
             })
         console.log(`Fetched ${events.length} liturgical events for ${year}`)
         return events
-    } catch (error) {
-        console.error('Error fetching liturgical calendar:', error)
+    } catch (error: any) {
+        // Silently handle abort/timeout errors
+        if (error?.name === 'AbortError') {
+            console.log('Liturgical calendar request timed out')
+        } else {
+            console.warn('Liturgical calendar unavailable:', error?.message || 'Unknown error')
+        }
         return []
     }
 }
+
 
 export function getLiturgicalColor(colorArray: string[]): string {
     if (!colorArray || colorArray.length === 0) return 'gray'

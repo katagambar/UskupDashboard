@@ -36,8 +36,22 @@ export const metadata: Metadata = {
   description: "Sistem Manajemen Data Uskup Keuskupan Surabaya",
   keywords: ["Dashboard", "Uskup", "Surabaya", "Keuskupan", "Katolik"],
   authors: [{ name: "Keuskupan Surabaya" }],
+  manifest: "/manifest.json",
+  themeColor: "#1e40af",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Dashboard Uskup",
+  },
   icons: {
     icon: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
   },
   openGraph: {
     title: "Dashboard Uskup Surabaya",

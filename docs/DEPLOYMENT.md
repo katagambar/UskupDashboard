@@ -2,8 +2,8 @@
 
 Panduan deployment Dashboard Uskup Surabaya ke production.
 
-**Last Updated**: 5 Januari 2026  
-**Version**: 2.5.0
+**Last Updated:** 9 Januari 2026  
+**Version:** 2.9.9
 
 ---
 
@@ -22,19 +22,19 @@ Panduan deployment Dashboard Uskup Surabaya ke production.
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | Database connection string | `postgresql://user:pass@host:5432/db` |
-| `JWT_SECRET` | Secret for JWT signing (32+ chars) | Random secure string |
-| `NODE_ENV` | Environment mode | `production` |
+| Variable       | Description                        | Example                               |
+| -------------- | ---------------------------------- | ------------------------------------- |
+| `DATABASE_URL` | Database connection string         | `postgresql://user:pass@host:5432/db` |
+| `JWT_SECRET`   | Secret for JWT signing (32+ chars) | Random secure string                  |
+| `NODE_ENV`     | Environment mode                   | `production`                          |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `POROROMO_API_URL` | External API for Imam sync | - |
-| `POROROMO_API_KEY` | API Key for Pororomo | - |
+| Variable           | Description                | Default |
+| ------------------ | -------------------------- | ------- |
+| `PORT`             | Server port                | `3000`  |
+| `POROROMO_API_URL` | External API for Imam sync | -       |
+| `POROROMO_API_KEY` | API Key for Pororomo       | -       |
 
 ---
 
@@ -110,7 +110,7 @@ CMD ["node", "server.js"]
 #### docker-compose.prod.yml
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   app:
     build:

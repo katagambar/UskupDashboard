@@ -1,0 +1,30 @@
+[
+  {
+    "id": "cmk2h3o0s002vvpl8xrv9nklg",
+    "judul": "Pembangunan Gereja Baru",
+    "deskripsi": "Pembangunan gereja baru di wilayah Surabaya Timur untuk melayani umat yang semakin meningkat",
+    "status": "Dalam Proses",
+    "progress": 65,
+    "targetDate": "2025-06-01",
+    "kategori": "Pembangunan",
+    "penanggungJawab": "Komisi Pembangunan",
+    "createdAt": "2026-01-06T10:55:13.756Z",
+    "updatedAt": "2026-01-06T10:55:13.756Z",
+    "completedAt": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  },
+  {
+    "id": "cmk2h3o1p002xvpl83bgcmvkd",
+    "judul": "Program Digital Pastoral",
+    "deskripsi": "Implementasi teknologi digital untuk mendukung kegiatan pastoral dan administrasi",
+    "status": "Dalam Proses",
+    "progress": 80,
+    "targetDate": "2025-03-01",
+    "kategori": "Pastoral",
+    "penanggungJawab": "Komisi Pastoral",
+    "createdAt": "2026-01-06T10:55:13.789Z",
+    "updatedAt": "2026-01-06T10:55:13.789Z",
+    "completedAt": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  }
+]

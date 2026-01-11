@@ -103,3 +103,13 @@ export function isPlainTextPassword(password: string): boolean {
   const commonPasswords = ['uskup2025', 'password', '123456', 'admin']
   return commonPasswords.includes(password)
 }
+
+/**
+ * Check if password meets strength requirements
+ * @param password - Password to check
+ * @returns True if password is strong enough
+ */
+export function isPasswordStrong(password: string): boolean {
+  const result = validatePassword(password)
+  return result.isValid
+}

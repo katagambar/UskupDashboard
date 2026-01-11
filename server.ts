@@ -23,12 +23,52 @@ async function createCustomServer() {
     await nextApp.prepare();
     const handle = nextApp.getRequestHandler();
 
+    // Simple Token Bucket Rate Limiter
+    const rateLimitMap = new Map<string, { tokens: number; lastFill: number }>();
+    const LIMIT = 100; // Max requests
+    const WINDOW = 10000; // 10 seconds
+    const FILL_RATE = LIMIT / WINDOW;
+
     // Create HTTP server that will handle both Next.js and Socket.IO
     const server = createServer((req, res) => {
       // Skip socket.io requests from Next.js handler
       if (req.url?.startsWith('/api/socketio')) {
         return;
       }
+
+      // Rate Limiting Logic
+      const ip = req.socket.remoteAddress || 'unknown';
+      const now = Date.now();
+      
+      let bucket = rateLimitMap.get(ip);
+      if (!bucket) {
+        bucket = { tokens: LIMIT, lastFill: now };
+        rateLimitMap.set(ip, bucket);
+      }
+
+      // Refill tokens
+      const timePassed = now - bucket.lastFill;
+      bucket.tokens = Math.min(LIMIT, bucket.tokens + timePassed * FILL_RATE);
+      bucket.lastFill = now;
+
+      // Consume token
+      if (bucket.tokens < 1) {
+        res.statusCode = 429;
+        res.setHeader('Retry-After', Math.ceil((1 - bucket.tokens) / FILL_RATE / 1000));
+        res.end('Too Many Requests');
+        return;
+      }
+      bucket.tokens -= 1;
+
+      // Clean up old buckets periodically (optimization)
+      if (rateLimitMap.size > 10000 && Math.random() < 0.01) {
+        for (const [key, b] of rateLimitMap) {
+          if (now - b.lastFill > WINDOW) {
+            rateLimitMap.delete(key);
+          }
+        }
+      }
+
       handle(req, res);
     });
 

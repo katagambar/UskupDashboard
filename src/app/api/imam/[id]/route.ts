@@ -1,131 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, notFoundResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get single imam by ID
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const { id } = await params
+  try {
+    const { id } = await params
 
-        const imam = await db.imam.findUnique({
-            where: { id }
-        })
+    const imam = await db.imam.findUnique({
+      where: { id }
+    })
 
-        if (!imam) {
-            return NextResponse.json(
-                { success: false, error: 'Imam not found' },
-                { status: 404 }
-            )
-        }
-
-        return NextResponse.json({ success: true, data: imam })
-    } catch (error) {
-        console.error('Error fetching imam:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch imam' },
-            { status: 500 }
-        )
+    if (!imam) {
+      return notFoundResponse('Imam')
     }
+
+    return successResponse(imam)
+  } catch (error) {
+    console.error('Error fetching imam:', error)
+    return serverErrorResponse('Failed to fetch imam')
+  }
 }
 
-// Update imam
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+// Update imam - using withAuth wrapper
+export const PUT = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
+    const body = await request.json()
+    const { nama, paroki, jabatan, tanggalTahbisan, nomorTelepon, email, alamat, status } = body
 
-        const { id } = await params
-        const body = await request.json()
-        const { nama, paroki, jabatan, tanggalTahbisan, nomorTelepon, email, alamat, status } = body
+    // Check if imam exists
+    const existingImam = await db.imam.findUnique({
+      where: { id }
+    })
 
-        // Check if imam exists
-        const existingImam = await db.imam.findUnique({
-            where: { id }
-        })
-
-        if (!existingImam) {
-            return NextResponse.json(
-                { success: false, error: 'Imam not found' },
-                { status: 404 }
-            )
-        }
-
-        const updatedImam = await db.imam.update({
-            where: { id },
-            data: {
-                nama: nama || undefined,
-                paroki: paroki || undefined,
-                jabatan: jabatan || undefined,
-                tanggalTahbisan: tanggalTahbisan || undefined,
-                nomorTelepon: nomorTelepon || undefined,
-                email: email || undefined,
-                alamat: alamat || undefined,
-                status: status || undefined
-            }
-        })
-
-        return NextResponse.json({ success: true, data: updatedImam })
-    } catch (error) {
-        console.error('Error updating imam:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to update imam' },
-            { status: 500 }
-        )
+    if (!existingImam) {
+      return notFoundResponse('Imam')
     }
-}
 
-// Delete imam
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+    const updatedImam = await db.imam.update({
+      where: { id },
+      data: {
+        nama: nama || undefined,
+        paroki: paroki || undefined,
+        jabatan: jabatan || undefined,
+        tanggalTahbisan: tanggalTahbisan || undefined,
+        nomorTelepon: nomorTelepon || undefined,
+        email: email || undefined,
+        alamat: alamat || undefined,
+        status: status || undefined
+      }
+    })
 
-        const { id } = await params
+    return successResponse(updatedImam)
+  } catch (error) {
+    console.error('Error updating imam:', error)
+    return serverErrorResponse('Failed to update imam')
+  }
+})
 
-        // Check if imam exists
-        const existingImam = await db.imam.findUnique({
-            where: { id }
-        })
+// Delete imam - using withAuth wrapper
+export const DELETE = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
 
-        if (!existingImam) {
-            return NextResponse.json(
-                { success: false, error: 'Imam not found' },
-                { status: 404 }
-            )
-        }
+    // Check if imam exists
+    const existingImam = await db.imam.findUnique({
+      where: { id }
+    })
 
-        await db.imam.delete({
-            where: { id }
-        })
-
-        return NextResponse.json({
-            success: true,
-            message: 'Imam deleted successfully'
-        })
-    } catch (error) {
-        console.error('Error deleting imam:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to delete imam' },
-            { status: 500 }
-        )
+    if (!existingImam) {
+      return notFoundResponse('Imam')
     }
-}
+
+    await db.imam.delete({
+      where: { id }
+    })
+
+    return successResponse({ message: 'Imam deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting imam:', error)
+    return serverErrorResponse('Failed to delete imam')
+  }
+})

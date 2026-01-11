@@ -1,14 +1,32 @@
 import { useQuery } from '@tanstack/react-query'
-import { getLiturgicalCalendar, LiturgicalEvent } from '@/lib/liturgical-calendar'
+import { LiturgicalEvent } from '@/lib/liturgical-calendar'
+
+// Fetch liturgical calendar from internal API route (which proxies to external API)
+async function fetchLiturgicalCalendar(year: number): Promise<LiturgicalEvent[]> {
+    try {
+        const response = await fetch(`/api/liturgical-calendar?year=${year}`)
+        if (!response.ok) {
+            console.warn(`Liturgical calendar API returned ${response.status}`)
+            return []
+        }
+        const result = await response.json()
+        return result.data || []
+    } catch (error) {
+        console.warn('Failed to fetch liturgical calendar:', error)
+        return []
+    }
+}
 
 export function useLiturgicalCalendar(year: number) {
     return useQuery({
         queryKey: ['liturgical-calendar', year],
-        queryFn: () => getLiturgicalCalendar(year),
+        queryFn: () => fetchLiturgicalCalendar(year),
         staleTime: 1000 * 60 * 60 * 24, // 24 hours
         gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+        retry: 2, // Retry twice on failure
     })
 }
+
 
 export function useLiturgicalEvent(date: Date) {
     const year = date.getFullYear()

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "cmk2h3nwh002lvpl8vr71zqoz",
+    "judul": "Review proposal gereja baru",
+    "deskripsi": "Review dan memberikan persetujuan proposal pembangunan gereja baru di wilayah Surabaya Timur",
+    "prioritas": "Tinggi",
+    "status": "Dalam Proses",
+    "progress": 80,
+    "deadline": "2025-01-20",
+    "kategori": "Pembangunan",
+    "penanggungJawab": "Mgr. Agustinus Tri Budi Utomo",
+    "createdAt": "2026-01-06T10:55:13.601Z",
+    "updatedAt": "2026-01-06T10:55:13.601Z",
+    "completedAt": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  },
+  {
+    "id": "cmk2h3nx7002nvpl82pbfxgr8",
+    "judul": "Pastoral visitasi Paroki X",
+    "deskripsi": "Melakukan kunjungan pastoral ke Paroki Santo Petrus untuk evaluasi kegiatan pastoral",
+    "prioritas": "Tinggi",
+    "status": "Dalam Proses",
+    "progress": 45,
+    "deadline": "2025-01-25",
+    "kategori": "Pastoral",
+    "penanggungJawab": "Mgr. Agustinus Tri Budi Utomo",
+    "createdAt": "2026-01-06T10:55:13.627Z",
+    "updatedAt": "2026-01-06T10:55:13.627Z",
+    "completedAt": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  },
+  {
+    "id": "cmk2h3nxj002pvpl8ozc8njlh",
+    "judul": "Surat edaran Adven",
+    "deskripsi": "Menyusun dan menandatangani surat edaran persiapan Adven 2025",
+    "prioritas": "Sedang",
+    "status": "Dalam Proses",
+    "progress": 90,
+    "deadline": "2025-01-18",
+    "kategori": "Komunikasi",
+    "penanggungJawab": "Mgr. Agustinus Tri Budi Utomo",
+    "createdAt": "2026-01-06T10:55:13.639Z",
+    "updatedAt": "2026-01-06T10:55:13.639Z",
+    "completedAt": null,
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  }
+]

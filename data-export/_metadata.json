@@ -1,0 +1,16 @@
+{
+  "exportedAt": "2026-01-08T11:18:51.252Z",
+  "source": "SQLite",
+  "tables": {
+    "users": 5,
+    "agenda": 6,
+    "tasks": 3,
+    "notulensi": 2,
+    "surat": 1,
+    "imam": 0,
+    "decisions": 2,
+    "paroki": 47,
+    "signatures": 0
+  },
+  "totalRecords": 66
+}

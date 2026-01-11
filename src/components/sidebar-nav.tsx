@@ -127,13 +127,13 @@ export function SidebarNav({ className, onItemClick }: SidebarNavProps) {
             >
               <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src="/bishop-avatar.jpg" alt="Uskup" />
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-medium">
+                <AvatarFallback className="bg-linear-to-br from-primary/20 to-primary/10 text-primary text-sm font-medium">
                   USK
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-sm font-medium truncate leading-tight">
-                  {user?.name || "Mgr. Agustinus"}
+                  {user?.name || "Pengguna"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate leading-tight">
                   Uskup Surabaya
@@ -151,10 +151,10 @@ export function SidebarNav({ className, onItemClick }: SidebarNavProps) {
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="font-medium">
-                  {user?.name || "Mgr. Agustinus Tri Budi Utomo"}
+                  {user?.name || "Pengguna"}
                 </span>
                 <span className="text-xs font-normal text-muted-foreground">
-                  {user?.email || "uskup@keuskupan.org"}
+                  {user?.email || "user@keuskupan.org"}
                 </span>
               </div>
             </DropdownMenuLabel>

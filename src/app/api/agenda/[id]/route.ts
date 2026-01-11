@@ -60,7 +60,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { judul, tanggal, waktu, lokasi, jenis, peserta, deskripsi, status } = body
+    const { judul, tanggal, tanggalAkhir, waktu, waktuAkhir, lokasi, jenis, peserta, deskripsi, status } = body
 
     // Check if agenda exists
     const existingAgenda = await db.agenda.findUnique({
@@ -80,7 +80,11 @@ export async function PATCH(
       data: {
         ...(judul && { judul }),
         ...(tanggal && { tanggal }),
+        // Handle tanggalAkhir - allow null to clear it
+        ...(tanggalAkhir !== undefined && { tanggalAkhir: tanggalAkhir || null }),
         ...(waktu && { waktu }),
+        // Handle waktuAkhir - allow null to clear it
+        ...(waktuAkhir !== undefined && { waktuAkhir: waktuAkhir || null }),
         ...(lokasi && { lokasi }),
         ...(jenis && { jenis }),
         ...(peserta && { peserta }),

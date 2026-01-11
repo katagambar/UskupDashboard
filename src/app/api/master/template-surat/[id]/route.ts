@@ -1,88 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, notFoundResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get single template
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const { id } = await params
-        const template = await db.templateSurat.findUnique({ where: { id } })
+  try {
+    const { id } = await params
+    const template = await db.templateSurat.findUnique({ where: { id } })
 
-        if (!template) {
-            return NextResponse.json(
-                { success: false, error: 'Template not found' },
-                { status: 404 }
-            )
-        }
-
-        return NextResponse.json({ success: true, data: template })
-    } catch (error) {
-        console.error('Error fetching template:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch template' },
-            { status: 500 }
-        )
+    if (!template) {
+      return notFoundResponse('Template')
     }
+
+    return successResponse(template)
+  } catch (error) {
+    console.error('Error fetching template:', error)
+    return serverErrorResponse('Failed to fetch template')
+  }
 }
 
-// Update template
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+// Update template - using withAuth wrapper
+export const PUT = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
+    const body = await request.json()
 
-        const { id } = await params
-        const body = await request.json()
+    const template = await db.templateSurat.update({
+      where: { id },
+      data: body
+    })
 
-        const template = await db.templateSurat.update({
-            where: { id },
-            data: body
-        })
+    return successResponse(template)
+  } catch (error) {
+    console.error('Error updating template:', error)
+    return serverErrorResponse('Failed to update template')
+  }
+})
 
-        return NextResponse.json({ success: true, data: template })
-    } catch (error) {
-        console.error('Error updating template:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to update template' },
-            { status: 500 }
-        )
-    }
-}
+// Delete template - using withAuth wrapper
+export const DELETE = withAuth(async (request, user, context) => {
+  try {
+    const { id } = await context?.params as { id: string }
+    await db.templateSurat.delete({ where: { id } })
 
-// Delete template
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const { id } = await params
-        await db.templateSurat.delete({ where: { id } })
-
-        return NextResponse.json({ success: true, message: 'Template deleted' })
-    } catch (error) {
-        console.error('Error deleting template:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to delete template' },
-            { status: 500 }
-        )
-    }
-}
+    return successResponse({ message: 'Template deleted' })
+  } catch (error) {
+    console.error('Error deleting template:', error)
+    return serverErrorResponse('Failed to delete template')
+  }
+})

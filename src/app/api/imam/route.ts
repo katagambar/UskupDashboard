@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get all imam or filter by query
 export async function GET(request: NextRequest) {
@@ -35,35 +35,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: imam })
+    return successResponse(imam)
   } catch (error) {
     console.error('Error fetching imam:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch imam data' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch imam data')
   }
 }
 
-// Create new imam entry
-export async function POST(request: NextRequest) {
+// Create new imam entry - using withAuth wrapper
+export const POST = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { nama, paroki, jabatan, tanggalTahbisan, nomorTelepon, email, alamat, status } = body
 
     if (!nama || !paroki || !jabatan || !tanggalTahbisan) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
+      return errorResponse('Missing required fields')
     }
 
     const imam = await db.imam.create({
@@ -79,49 +65,31 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: imam }, { status: 201 })
+    return successResponse(imam, 201)
   } catch (error) {
     console.error('Error creating imam:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to create imam entry' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to create imam entry')
   }
-}
+})
 
-// Clear all imam data (for sync preparation)
-export async function DELETE(request: NextRequest) {
+// Clear all imam data (for sync preparation) - using withAuth wrapper
+export const DELETE = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     // Check if action is "clear-all"
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action')
 
     if (action === 'clear-all') {
       const result = await db.imam.deleteMany({})
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         message: `Deleted ${result.count} imam records`,
         count: result.count
       })
     }
 
-    return NextResponse.json(
-      { success: false, error: 'Missing action parameter' },
-      { status: 400 }
-    )
+    return errorResponse('Missing action parameter')
   } catch (error) {
     console.error('Error deleting imam data:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to clear imam data' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to clear imam data')
   }
-}
+})

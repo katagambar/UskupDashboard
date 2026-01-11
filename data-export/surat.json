@@ -1,0 +1,21 @@
+[
+  {
+    "id": "cmk4o2cep0001vpdgmc123jud",
+    "nomor": "SED/001/2026",
+    "jenis": "Undangan",
+    "judul": "Surat Undangan Test",
+    "pengirim": "Keuskupan Surabaya",
+    "penerima": "Para Pastor Paroki",
+    "tanggal": "2026-01-07",
+    "isi": "Ini adalah surat test untuk verifikasi fitur PDF export.",
+    "lampiran": null,
+    "status": "Menunggu",
+    "prioritas": "Normal",
+    "isSigned": false,
+    "signedAt": null,
+    "signedBy": null,
+    "createdAt": "2026-01-07T23:45:41.630Z",
+    "updatedAt": "2026-01-07T23:45:41.630Z",
+    "createdBy": "cmk2h3mcv0000vpl817dflvvp"
+  }
+]

@@ -2,18 +2,18 @@
 
 Sistem Informasi Manajemen Terpadu untuk Keuskupan Surabaya, dirancang untuk membantu Uskup dan Kuria dalam pengelolaan administrasi, pastoral, dan pengambilan keputusan berbasis data.
 
-**Version**: 2.5.0  
-**Last Updated**: 5 Januari 2026
+**Version**: 2.9.10
+**Last Updated**: 11 Januari 2026
 
 ## 📚 Dokumentasi Lengkap
 
-| Dokumen | Deskripsi |
-|---------|-----------|
-| [📖 Arsitektur & Database](docs/ARCHITECTURE.md) | Arsitektur sistem dan ERD |
-| [🔌 API Reference](docs/API_DOCUMENTATION.md) | Dokumentasi API endpoints |
-| [🔧 Development Guide](docs/DEVELOPMENT.md) | Panduan pengembangan |
-| [🚀 Deployment Guide](docs/DEPLOYMENT.md) | Panduan deployment production |
-| [📝 Changelog](docs/CHANGELOG.md) | Riwayat perubahan |
+| Dokumen                                          | Deskripsi                     |
+| ------------------------------------------------ | ----------------------------- |
+| [📖 Arsitektur & Database](docs/ARCHITECTURE.md) | Arsitektur sistem dan ERD     |
+| [🔌 API Reference](docs/API_DOCUMENTATION.md)    | Dokumentasi API endpoints     |
+| [🔧 Development Guide](docs/DEVELOPMENT.md)      | Panduan pengembangan          |
+| [🚀 Deployment Guide](docs/DEPLOYMENT.md)        | Panduan deployment production |
+| [📝 Changelog](docs/CHANGELOG.md)                | Riwayat perubahan             |
 
 ## 🌟 Fitur Utama
 
@@ -53,17 +53,25 @@ Sistem Informasi Manajemen Terpadu untuk Keuskupan Surabaya, dirancang untuk mem
 - Traffic Light Status (Baik/Perlu Perhatian/Kritis)
 - Review workflow
 
+### 7. Surat Menyurat & Arsip Digital
+
+- **G-Code System**: Kodifikasi surat keluar otomatis/terstandar
+- **Rich Text Editor**: Pembuatan draft surat dengan formatting lengkap
+- **Digital Attachments**: Upload lampiran ke Google Drive
+- **Multi-format Export**: Download PDF (Siap Cetak) dan Word (Editable)
+- **Dynamic Letterhead**: Konfigurasi Kop Surat via Master Data
+
 ## 🛠️ Stack Teknologi
 
-| Layer | Technology |
-|-------|------------|
+| Layer         | Technology                         |
+| ------------- | ---------------------------------- |
 | **Framework** | Next.js 16 (App Router, Turbopack) |
-| **Language** | TypeScript |
-| **Styling** | TailwindCSS 4, shadcn/ui |
-| **ORM** | Prisma |
-| **Database** | SQLite (Dev) / PostgreSQL (Prod) |
-| **Auth** | Custom JWT |
-| **Real-time** | Socket.IO |
+| **Language**  | TypeScript                         |
+| **Styling**   | TailwindCSS 4, shadcn/ui           |
+| **ORM**       | Prisma                             |
+| **Database**  | SQLite (Dev) / PostgreSQL (Prod)   |
+| **Auth**      | Custom JWT                         |
+| **Real-time** | Socket.IO                          |
 
 ## 🚀 Quick Start
 
@@ -96,11 +104,11 @@ Access at: **<http://localhost:3040>**
 
 ## 🔐 Test Credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| USKUP | <uskup@keuskupan-sby.or.id> | UskupSBY2025! |
+| Role       | Email                            | Password      |
+| ---------- | -------------------------------- | ------------- |
+| USKUP      | <uskup@keuskupan-sby.or.id>      | UskupSBY2025! |
 | SEKRETARIS | <sekretaris@keuskupan-sby.or.id> | UskupSBY2025! |
-| VIKJEN | <vikjen@keuskupan-sby.or.id> | UskupSBY2025! |
+| VIKJEN     | <vikjen@keuskupan-sby.or.id>     | UskupSBY2025! |
 
 ## 📁 Project Structure
 
@@ -134,19 +142,19 @@ src/
 
 ## 📊 User Roles
 
-| Role | Level | Permissions |
-|------|-------|-------------|
-| USKUP | 1 | Full access, final decisions |
-| SEKRETARIS | 2 | Document management, user management |
-| VIKJEN | 3 | Vicar General access |
-| VIKYUD | 4 | Judicial Vicar access |
-| EKONOM | 5 | Financial management |
-| DELEGATUS | 6 | Delegate access |
-| KURIA | 7 | Curia staff access |
-| VIKEP | 8 | Viceprovincial access |
-| KOMISI | 9 | Commission access |
-| PAROKI | 10 | Parish access |
-| STAFF | 11 | Basic staff access |
+| Role       | Level | Permissions                          |
+| ---------- | ----- | ------------------------------------ |
+| USKUP      | 1     | Full access, final decisions         |
+| SEKRETARIS | 2     | Document management, user management |
+| VIKJEN     | 3     | Vicar General access                 |
+| VIKYUD     | 4     | Judicial Vicar access                |
+| EKONOM     | 5     | Financial management                 |
+| DELEGATUS  | 6     | Delegate access                      |
+| KURIA      | 7     | Curia staff access                   |
+| VIKEP      | 8     | Viceprovincial access                |
+| KOMISI     | 9     | Commission access                    |
+| PAROKI     | 10    | Parish access                        |
+| STAFF      | 11    | Basic staff access                   |
 
 ---
 

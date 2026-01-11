@@ -21,7 +21,7 @@ services:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
       # Magisterium AI API Key
-      - MAGISTERIUM_API_KEY=sk_wahyus_6446455d2b3cd531cb1e4c499735c2c109bf288540b57424aa000facda740422
+      - MAGISTERIUM_API_KEY=${MAGISTERIUM_API_KEY}
       # Note: Using Webpack (custom server.ts) - HMR may require restart
     command: npx next dev -p 3000
     restart: unless-stopped

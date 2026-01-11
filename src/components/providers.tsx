@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "@/lib/query-client"
 import { NavigationProgress } from "@/components/navigation-progress"
+import { ServiceWorkerRegistration } from "@/components/pwa-register"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem
         disableTransitionOnChange
       >
+        <ServiceWorkerRegistration />
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>

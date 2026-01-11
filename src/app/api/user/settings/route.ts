@@ -1,87 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-// Get user settings
-export async function GET(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+// Get user settings - using withAuth wrapper
+export const GET = withAuth(async (request, user) => {
+  try {
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    })
 
-        const userData = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            }
-        })
+    return successResponse(userData)
+  } catch (error) {
+    console.error('Error fetching user settings:', error)
+    return serverErrorResponse('Failed to fetch user settings')
+  }
+})
 
-        return NextResponse.json({ success: true, data: userData })
-    } catch (error) {
-        console.error('Error fetching user settings:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch user settings' },
-            { status: 500 }
-        )
+// Update user settings - using withAuth wrapper
+export const PATCH = withAuth(async (request, user) => {
+  try {
+    const body = await request.json()
+    const { name, email } = body
+
+    // Check if email already exists (if changed)
+    if (email && email !== user.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      })
+      if (existingUser) {
+        return errorResponse('Email already in use')
+      }
     }
-}
 
-// Update user settings
-export async function PATCH(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        name: name || undefined,
+        email: email || undefined,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      }
+    })
 
-        const body = await request.json()
-        const { name, email } = body
-
-        // Check if email already exists (if changed)
-        if (email && email !== user.email) {
-            const existingUser = await prisma.user.findUnique({
-                where: { email }
-            })
-            if (existingUser) {
-                return NextResponse.json(
-                    { success: false, error: 'Email already in use' },
-                    { status: 400 }
-                )
-            }
-        }
-
-        const updatedUser = await prisma.user.update({
-            where: { id: user.id },
-            data: {
-                name: name || undefined,
-                email: email || undefined,
-            },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-            }
-        })
-
-        return NextResponse.json({ success: true, data: updatedUser })
-    } catch (error) {
-        console.error('Error updating user settings:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to update user settings' },
-            { status: 500 }
-        )
-    }
-}
+    return successResponse(updatedUser)
+  } catch (error) {
+    console.error('Error updating user settings:', error)
+    return serverErrorResponse('Failed to update user settings')
+  }
+})

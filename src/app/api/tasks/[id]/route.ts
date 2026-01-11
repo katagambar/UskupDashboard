@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, notFoundResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get specific task by ID
 export async function GET(
@@ -22,48 +22,24 @@ export async function GET(
     })
 
     if (!task) {
-      return NextResponse.json(
-        { success: false, error: 'Task not found' },
-        { status: 404 }
-      )
+      return notFoundResponse('Task')
     }
 
-    return NextResponse.json({ success: true, data: task })
+    return successResponse(task)
   } catch (error) {
     console.error('Error fetching task:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch task' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch task')
   }
 }
 
-// Update task
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Update task - using withAuth wrapper
+export const PATCH = withAuth(async (request, user, context) => {
   try {
-    const { id } = await params
-
-
-    const user = await getCurrentUserFromRequest(request)
-
-
-    if (!user) {
-      console.error('❌ No user found in PATCH request')
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+    const { id } = await context?.params as { id: string }
     const body = await request.json()
-
 
     // Handle progress update separately
     if (body.progress !== undefined) {
-
       const newStatus = body.progress === 100 ? 'Selesai' :
         body.progress > 0 ? 'Dalam Proses' : 'Menunggu'
 
@@ -76,52 +52,34 @@ export async function PATCH(
         }
       })
 
-      return NextResponse.json({ success: true, data: task })
+      return successResponse(task)
     }
 
     // Handle general update
-
     const task = await db.task.update({
       where: { id },
       data: body
     })
 
-
-    return NextResponse.json({ success: true, data: task })
+    return successResponse(task)
   } catch (error) {
-    console.error('❌ Error updating task:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to update task' },
-      { status: 500 }
-    )
+    console.error('Error updating task:', error)
+    return serverErrorResponse('Failed to update task')
   }
-}
+})
 
-// Delete task
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Delete task - using withAuth wrapper
+export const DELETE = withAuth(async (request, user, context) => {
   try {
-    const { id } = await params
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const { id } = await context?.params as { id: string }
 
     await db.task.delete({
       where: { id }
     })
 
-    return NextResponse.json({ success: true, message: 'Task deleted successfully' })
+    return successResponse({ message: 'Task deleted successfully' })
   } catch (error) {
     console.error('Error deleting task:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete task' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to delete task')
   }
-}
+})

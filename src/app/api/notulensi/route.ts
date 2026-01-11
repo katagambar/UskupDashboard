@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get all notulensi or filter by query
 export async function GET(request: NextRequest) {
@@ -42,36 +42,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: notulensi })
+    return successResponse(notulensi)
   } catch (error) {
     console.error('Error fetching notulensi:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch notulensi' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch notulensi')
   }
 }
 
-// Create new notulensi
-export async function POST(request: NextRequest) {
+// Create new notulensi - using withAuth wrapper
+export const POST = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-
-    if (!user || !user.id) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized - Please sign in to create notulensi' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { judul, tanggal, jenis, peserta, isi, kesimpulan, agendaId } = body
 
     if (!judul || !tanggal || !jenis || !peserta) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
+      return errorResponse('Missing required fields')
     }
 
     const notulensi = await db.notulensi.create({
@@ -88,12 +73,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: notulensi }, { status: 201 })
+    return successResponse(notulensi, 201)
   } catch (error) {
     console.error('Error creating notulensi:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to create notulensi' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to create notulensi')
   }
-}
+})

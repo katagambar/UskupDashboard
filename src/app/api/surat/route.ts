@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { parsePaginationParams, createPaginatedResponse, getPrismaPageOptions } from '@/lib/pagination'
+import { withRateLimit, getRateLimitHeaders } from '@/lib/rate-limit'
+import { createSuratSchema, validateInput, formatZodErrors } from '@/lib/validation-schemas'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-// Get all surat or filter by query
+// Get all surat or filter by query (with pagination)
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { searchParams } = new URL(request.url)
     const jenis = searchParams.get('jenis')
     const status = searchParams.get('status')
     const prioritas = searchParams.get('prioritas')
     const search = searchParams.get('search')
+    const all = searchParams.get('all') === 'true'
 
+    const paginationParams = parsePaginationParams(request)
     const where: any = {}
 
     if (jenis && jenis !== 'semua') {
@@ -33,51 +41,55 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    const total = await db.surat.count({ where })
+
     const surat = await db.surat.findMany({
       where,
       include: {
         creator: {
           select: {
+            id: true,
             name: true,
             email: true
           }
-        }
+        },
+        signature: true
       },
       orderBy: {
         tanggal: 'desc'
-      }
+      },
+      ...(all ? {} : getPrismaPageOptions(paginationParams))
     })
 
-    return NextResponse.json({ success: true, data: surat })
+    const headers = getRateLimitHeaders(request)
+
+    if (all) {
+      return NextResponse.json({ success: true, data: surat }, { headers })
+    }
+
+    return NextResponse.json(
+      createPaginatedResponse(surat, total, paginationParams),
+      { headers }
+    )
   } catch (error) {
     console.error('Error fetching surat:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch surat' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch surat')
   }
 }
 
-// Create new surat
-export async function POST(request: NextRequest) {
+
+// Create new surat - using withAuth wrapper
+export const POST = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
-    const { nomor, jenis, judul, pengirim, penerima, tanggal, isi, prioritas } = body
-
-    if (!nomor || !jenis || !judul || !pengirim || !penerima || !tanggal) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
+    
+    // Validate with Zod schema
+    const validation = validateInput(createSuratSchema, body)
+    if (!validation.success) {
+      return errorResponse(formatZodErrors(validation.error))
     }
+
+    const { nomor, jenis, judul, pengirim, penerima, tanggal, isi, prioritas } = validation.data
 
     const surat = await db.surat.create({
       data: {
@@ -94,12 +106,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: surat }, { status: 201 })
+    return successResponse(surat, 201)
   } catch (error) {
     console.error('Error creating surat:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to create surat' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to create surat')
   }
-}
+})

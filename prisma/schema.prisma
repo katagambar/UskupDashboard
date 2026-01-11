@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -99,6 +99,12 @@ model Agenda {
   createdBy        String
   creator          User       @relation(fields: [createdBy], references: [id])
   notulensi        Notulensi?
+
+  // Performance indexes
+  @@index([tanggal])
+  @@index([status])
+  @@index([jenis])
+  @@index([createdBy])
 }
 
 model Task {
@@ -116,6 +122,13 @@ model Task {
   completedAt     DateTime?
   createdBy       String
   creator         User      @relation(fields: [createdBy], references: [id])
+
+  // Performance indexes
+  @@index([status])
+  @@index([deadline])
+  @@index([prioritas])
+  @@index([createdBy])
+  @@index([kategori])
 }
 
 model Notulensi {
@@ -163,6 +176,13 @@ model Surat {
   
   // Relation to signature
   signature DigitalSignature?
+
+  // Performance indexes
+  @@index([status])
+  @@index([tanggal])
+  @@index([jenis])
+  @@index([createdBy])
+  @@index([isSigned])
 }
 
 // ============================================
@@ -257,6 +277,11 @@ model Notification {
   readAt    DateTime?
   userId    String
   user      User      @relation(fields: [userId], references: [id])
+
+  // Performance indexes
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Account {
@@ -456,6 +481,13 @@ model Issue {
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  // Performance indexes
+  @@index([status])
+  @@index([priority])
+  @@index([createdBy])
+  @@index([assignedTo])
+  @@index([category])
 }
 
 // Model Pendapat/Telaah dari Pejabat
@@ -525,4 +557,35 @@ model Report {
   
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+
+  // Performance indexes
+  @@index([status])
+  @@index([type])
+  @@index([submittedBy])
+  @@index([unitType])
+  @@index([period])
 }
+
+// ============================================
+// AUDIT LOGGING
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  userName    String
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, SYNC, SIGN, APPROVE, REJECT
+  resource    String   // AGENDA, TASK, SURAT, ISSUE, REPORT, USER, NOTULENSI, GOOGLE_CALENDAR
+  resourceId  String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  // Performance indexes
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([timestamp])
+}
+

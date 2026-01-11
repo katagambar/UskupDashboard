@@ -33,25 +33,59 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
 
-  // Headers for better caching
+  // Headers for better caching and security
   async headers() {
+    const isProduction = process.env.NODE_ENV === 'production'
+    
+    // Base security headers
+    const securityHeaders = [
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff'
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY'
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block'
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin'
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=()'
+      },
+      // CSP - Content Security Policy
+      {
+        key: 'Content-Security-Policy',
+        value: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "img-src 'self' data: blob: https:",
+          "font-src 'self' https://fonts.gstatic.com",
+          "connect-src 'self' https://www.googleapis.com https://accounts.google.com",
+          "frame-ancestors 'none'",
+        ].join('; ')
+      }
+    ]
+
+    // Add HSTS only in production (requires HTTPS)
+    if (isProduction) {
+      securityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains; preload'
+      })
+    }
+
     return [
       {
         source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          }
-        ]
+        headers: securityHeaders
       },
       {
         source: '/_next/static/(.*)',

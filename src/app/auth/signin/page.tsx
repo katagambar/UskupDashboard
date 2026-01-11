@@ -18,7 +18,7 @@ function LeftPanel() {
       />
 
       {/* Gradient Overlay */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-white/10 to-transparent pointer-events-none" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center text-white max-w-lg animate-fade-in">
@@ -89,6 +89,13 @@ function LoginForm() {
     password: '',
     rememberMe: false
   })
+  
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotMessage, setForgotMessage] = useState('')
+  const [forgotError, setForgotError] = useState('')
 
   const router = useRouter()
   const { login } = useCurrentUser()
@@ -121,7 +128,97 @@ function LoginForm() {
     })
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setForgotError('')
+    setForgotMessage('')
+
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        setForgotMessage(data.message)
+        // In dev mode, show the reset link
+        if (data._dev?.resetUrl) {
+          console.log('Reset URL:', data._dev.resetUrl)
+        }
+      } else {
+        setForgotError(data.error || 'Gagal mengirim email reset')
+      }
+    } catch {
+      setForgotError('Terjadi kesalahan. Silakan coba lagi.')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
   return (
+    <>
+    {/* Forgot Password Modal */}
+    {showForgotPassword && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-md shadow-2xl">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Lupa Password?
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Masukkan email Anda untuk menerima link reset password.
+          </p>
+          
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <input
+              type="email"
+              placeholder="Email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            
+            {forgotError && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                {forgotError}
+              </div>
+            )}
+            
+            {forgotMessage && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm">
+                {forgotMessage}
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false)
+                  setForgotEmail('')
+                  setForgotError('')
+                  setForgotMessage('')
+                }}
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {forgotLoading ? 'Mengirim...' : 'Kirim'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+    
     <div className="w-full max-w-md space-y-8 animate-fade-in relative z-10">
 
       {/* Header */}
@@ -209,9 +306,13 @@ function LoginForm() {
             </label>
           </div>
           <div className="text-sm">
-            <a href="#" className="font-medium text-secondary-warm hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+            <button 
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="font-medium text-secondary-warm hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+            >
               Lupa password?
-            </a>
+            </button>
           </div>
         </div>
 
@@ -264,6 +365,7 @@ function LoginForm() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
@@ -280,7 +382,7 @@ export default function SignIn() {
         <div
           className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none mix-blend-multiply dark:mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/white-diamond.png')]"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-100/30 dark:from-black/20 dark:via-transparent dark:to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-gray-50/50 via-transparent to-gray-100/30 dark:from-black/20 dark:via-transparent dark:to-black/20 pointer-events-none" />
 
         {/* Mobile Header (Logo) */}
         <div className="lg:hidden mb-8 text-center animate-fade-in">

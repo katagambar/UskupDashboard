@@ -6,109 +6,86 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
 import { createReport, listReports } from '@/lib/report-service'
 import { prisma } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
+import { withAuth, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-export async function GET(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+// GET - List reports (requires auth)
+export const GET = withAuth(async (request, user) => {
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
+  try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') as any || undefined
+    const unitType = searchParams.get('unitType') || undefined
+    const type = searchParams.get('type') as any || undefined
+    const period = searchParams.get('period') || undefined
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
 
-        const { searchParams } = new URL(request.url)
-        const status = searchParams.get('status') as any || undefined
-        const unitType = searchParams.get('unitType') || undefined
-        const type = searchParams.get('type') as any || undefined
-        const period = searchParams.get('period') || undefined
-        const limit = parseInt(searchParams.get('limit') || '20')
-        const offset = parseInt(searchParams.get('offset') || '0')
+    // Get user's role to filter
+    const fullUser = await prisma.user.findUnique({ where: { id: user.id } })
 
-        // Get user's role to filter
-        const fullUser = await prisma.user.findUnique({ where: { id: user.id } })
+    // Non-admin users only see their own reports
+    const submittedBy = ['USKUP', 'SEKRETARIS', 'VIKJEN'].includes(fullUser?.role || '')
+      ? undefined
+      : user.id
 
-        // Non-admin users only see their own reports
-        const submittedBy = ['USKUP', 'SEKRETARIS', 'VIKJEN'].includes(fullUser?.role || '')
-            ? undefined
-            : user.id
+    const result = await listReports({
+      status,
+      unitType,
+      type,
+      period,
+      limit,
+      offset,
+      submittedBy
+    })
 
-        const result = await listReports({
-            status,
-            unitType,
-            type,
-            period,
-            limit,
-            offset,
-            submittedBy
-        })
+    return NextResponse.json({
+      success: true,
+      data: result.reports,
+      total: result.total
+    })
+  } catch (error) {
+    console.error('List reports error:', error)
+    return serverErrorResponse('Gagal mengambil daftar laporan')
+  }
+})
 
-        return NextResponse.json({
-            success: true,
-            data: result.reports,
-            total: result.total
-        })
+// POST - Create new report (requires auth)
+export const POST = withAuth(async (request, user) => {
+  try {
+    const body = await request.json()
+    const { type, title, period, content, highlights, challenges, requests, statistics, unitType, unitId, unitName } = body
 
-    } catch (error) {
-        console.error('List reports error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Gagal mengambil daftar laporan' },
-            { status: 500 }
-        )
+    if (!type || !title || !period || !content || !unitType || !unitName) {
+      return errorResponse('Field wajib tidak lengkap')
     }
-}
 
-export async function POST(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+    const report = await createReport({
+      type,
+      title,
+      period,
+      content,
+      highlights,
+      challenges,
+      requests,
+      statistics,
+      unitType,
+      unitId,
+      unitName,
+      submittedBy: user.id
+    })
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
-
-        const body = await request.json()
-        const { type, title, period, content, highlights, challenges, requests, statistics, unitType, unitId, unitName } = body
-
-        if (!type || !title || !period || !content || !unitType || !unitName) {
-            return NextResponse.json(
-                { success: false, error: 'Field wajib tidak lengkap' },
-                { status: 400 }
-            )
-        }
-
-        const report = await createReport({
-            type,
-            title,
-            period,
-            content,
-            highlights,
-            challenges,
-            requests,
-            statistics,
-            unitType,
-            unitId,
-            unitName,
-            submittedBy: user.id
-        })
-
-        return NextResponse.json({
-            success: true,
-            data: report,
-            message: 'Laporan berhasil dibuat'
-        }, { status: 201 })
-
-    } catch (error) {
-        console.error('Create report error:', error)
-        return NextResponse.json(
-            { success: false, error: error instanceof Error ? error.message : 'Gagal membuat laporan' },
-            { status: 500 }
-        )
-    }
-}
+    return NextResponse.json({
+      success: true,
+      data: report,
+      message: 'Laporan berhasil dibuat'
+    }, { status: 201 })
+  } catch (error) {
+    console.error('Create report error:', error)
+    return serverErrorResponse(error instanceof Error ? error.message : 'Gagal membuat laporan')
+  }
+})

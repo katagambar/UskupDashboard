@@ -32,6 +32,7 @@ const TIPE_OPTIONS = [
     { value: 'PERIODE', label: 'Periode Laporan' },
     { value: 'KATEGORI_ISU', label: 'Kategori Isu' },
     { value: 'STATUS_TUGAS', label: 'Status Tugas' },
+    { value: 'CONFIG_KOP', label: 'Konfigurasi Kop Surat' },
 ]
 
 export function ParameterManagement() {
@@ -235,51 +236,71 @@ export function ParameterManagement() {
                             {!editingParam && (
                                 <div className="grid gap-2">
                                     <Label htmlFor="kode">Kode *</Label>
-                                    <Input
-                                        id="kode"
-                                        value={formData.kode}
-                                        onChange={(e) => setFormData({ ...formData, kode: e.target.value.toUpperCase() })}
-                                        placeholder="Contoh: TINGGI"
-                                    />
+                                    {selectedTipe === 'CONFIG_KOP' ? (
+                                        <Select 
+                                            value={formData.kode} 
+                                            onValueChange={(val) => setFormData({ ...formData, kode: val })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Pilih Konfigurasi" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="NAMA">Nama Institusi</SelectItem>
+                                                <SelectItem value="ALAMAT">Alamat Lengkap</SelectItem>
+                                                <SelectItem value="KONTAK">Kontak (Telp/Email)</SelectItem>
+                                                <SelectItem value="LOGO">URL Logo (Opsional)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <Input
+                                            id="kode"
+                                            value={formData.kode}
+                                            onChange={(e) => setFormData({ ...formData, kode: e.target.value.toUpperCase() })}
+                                            placeholder="Contoh: TINGGI"
+                                        />
+                                    )}
                                 </div>
                             )}
                             <div className="grid gap-2">
-                                <Label htmlFor="nama">Nama *</Label>
+                                <Label htmlFor="nama">{selectedTipe === 'CONFIG_KOP' ? 'Isi / Nilai *' : 'Nama *'}</Label>
                                 <Input
                                     id="nama"
                                     value={formData.nama}
                                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                                    placeholder="Contoh: Prioritas Tinggi"
+                                    placeholder={selectedTipe === 'CONFIG_KOP' ? "Contoh: KEUSKUPAN SURABAYA" : "Contoh: Prioritas Tinggi"}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="warna">Warna (hex)</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            id="warna"
-                                            value={formData.warna}
-                                            onChange={(e) => setFormData({ ...formData, warna: e.target.value })}
-                                            placeholder="#ef4444"
-                                        />
-                                        {formData.warna && (
-                                            <div
-                                                className="w-9 h-9 rounded border"
-                                                style={{ backgroundColor: formData.warna }}
+                            
+                            {selectedTipe !== 'CONFIG_KOP' && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="warna">Warna (hex)</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                id="warna"
+                                                value={formData.warna}
+                                                onChange={(e) => setFormData({ ...formData, warna: e.target.value })}
+                                                placeholder="#ef4444"
                                             />
-                                        )}
+                                            {formData.warna && (
+                                                <div
+                                                    className="w-9 h-9 rounded border"
+                                                    style={{ backgroundColor: formData.warna }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="urutan">Urutan</Label>
+                                        <Input
+                                            id="urutan"
+                                            type="number"
+                                            value={formData.urutan}
+                                            onChange={(e) => setFormData({ ...formData, urutan: parseInt(e.target.value) || 0 })}
+                                        />
                                     </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="urutan">Urutan</Label>
-                                    <Input
-                                        id="urutan"
-                                        type="number"
-                                        value={formData.urutan}
-                                        onChange={(e) => setFormData({ ...formData, urutan: parseInt(e.target.value) || 0 })}
-                                    />
-                                </div>
-                            </div>
+                            )}
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" onClick={() => {

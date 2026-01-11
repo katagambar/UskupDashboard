@@ -14,25 +14,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mounted, setMounted] = useState(false)
 
   // Prevent hydration mismatch by only rendering after mount
+  // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Show a minimal loading state on server/initial render
-  if (!mounted) {
-    return (
-      <div className="flex h-screen bg-muted/40">
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <div className="h-16 border-b bg-background" /> {/* Header placeholder */}
-          <main className="flex-1 overflow-auto">
-            <div className="p-4 md:p-6">
-              {children}
-            </div>
-          </main>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="flex h-screen bg-muted/40">

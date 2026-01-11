@@ -106,3 +106,8 @@ export function useKategoriIsu() {
 export function useStatusTugas() {
     return useParameters({ tipe: 'STATUS_TUGAS' })
 }
+
+export function useKodeKearsipan() {
+    return useParameters({ tipe: 'KODE_KEARSIPAN' })
+}
+

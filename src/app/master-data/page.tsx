@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -814,7 +815,14 @@ export default function MasterDataPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Konten Template *</Label>
-                                    <Textarea value={templateForm.konten} onChange={(e) => setTemplateForm({ ...templateForm, konten: e.target.value })} className="min-h-[150px] font-mono text-sm" placeholder="Gunakan {variabel} untuk placeholder" />
+                                    <div className="border rounded-md">
+                                        <RichTextEditor
+                                            content={templateForm.konten}
+                                            onChange={(html) => setTemplateForm({ ...templateForm, konten: html })}
+                                            placeholder="Gunakan {variabel} untuk placeholder"
+                                            minHeight="300px"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}

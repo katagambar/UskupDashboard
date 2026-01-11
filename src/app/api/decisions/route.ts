@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
+import { withAuth, successResponse, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
 // Get all decisions or filter by query
 export async function GET(request: NextRequest) {
@@ -42,35 +42,21 @@ export async function GET(request: NextRequest) {
       ]
     })
 
-    return NextResponse.json({ success: true, data: decisions })
+    return successResponse(decisions)
   } catch (error) {
     console.error('Error fetching decisions:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch decisions' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to fetch decisions')
   }
 }
 
-// Create new decision
-export async function POST(request: NextRequest) {
+// Create new decision - using withAuth wrapper
+export const POST = withAuth(async (request, user) => {
   try {
-    const user = await getCurrentUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const { judul, deskripsi, targetDate, kategori, penanggungJawab } = body
 
     if (!judul || !deskripsi || !targetDate || !kategori || !penanggungJawab) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      )
+      return errorResponse('Missing required fields')
     }
 
     const decision = await db.decision.create({
@@ -86,12 +72,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: decision }, { status: 201 })
+    return successResponse(decision, 201)
   } catch (error) {
     console.error('Error creating decision:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to create decision' },
-      { status: 500 }
-    )
+    return serverErrorResponse('Failed to create decision')
   }
-}
+})

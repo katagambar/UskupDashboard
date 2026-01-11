@@ -6,100 +6,77 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUserFromRequest } from '@/lib/custom-auth'
 import { createIssue, listIssues } from '@/lib/issue-service'
 import { canCreateIssues } from '@/lib/rbac'
 import { prisma } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
+import { withAuth, errorResponse, serverErrorResponse } from '@/lib/api-helpers'
 
-export async function GET(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+// GET - List issues (requires auth)
+export const GET = withAuth(async (request, user) => {
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
+  try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') || undefined
+    const category = searchParams.get('category') || undefined
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
 
-        const { searchParams } = new URL(request.url)
-        const status = searchParams.get('status') || undefined
-        const category = searchParams.get('category') || undefined
-        const limit = parseInt(searchParams.get('limit') || '20')
-        const offset = parseInt(searchParams.get('offset') || '0')
+    const result = await listIssues({ status, category, limit, offset })
 
-        const result = await listIssues({ status, category, limit, offset })
+    return NextResponse.json({
+      success: true,
+      data: result.issues,
+      total: result.total
+    })
+  } catch (error) {
+    console.error('List issues error:', error)
+    return serverErrorResponse('Gagal mengambil daftar isu')
+  }
+})
 
-        return NextResponse.json({
-            success: true,
-            data: result.issues,
-            total: result.total
-        })
+// POST - Create new issue (requires auth + RBAC)
+export const POST = withAuth(async (request, user) => {
+  try {
+    // Get full user with role
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    })
 
-    } catch (error) {
-        console.error('List issues error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Gagal mengambil daftar isu' },
-            { status: 500 }
-        )
+    if (!fullUser || !canCreateIssues(fullUser.role)) {
+      return NextResponse.json(
+        { success: false, error: 'Tidak memiliki hak untuk membuat isu' },
+        { status: 403 }
+      )
     }
-}
 
-export async function POST(request: NextRequest) {
-    try {
-        const user = await getCurrentUserFromRequest(request)
+    const body = await request.json()
+    const { title, description, category, priority, assignedTo, relatedDocType, relatedDocId } = body
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak terautentikasi' },
-                { status: 401 }
-            )
-        }
-
-        // Get full user with role
-        const fullUser = await prisma.user.findUnique({
-            where: { id: user.id }
-        })
-
-        if (!fullUser || !canCreateIssues(fullUser.role)) {
-            return NextResponse.json(
-                { success: false, error: 'Tidak memiliki hak untuk membuat isu' },
-                { status: 403 }
-            )
-        }
-
-        const body = await request.json()
-        const { title, description, category, priority, assignedTo, relatedDocType, relatedDocId } = body
-
-        if (!title || !description) {
-            return NextResponse.json(
-                { success: false, error: 'Judul dan deskripsi wajib diisi' },
-                { status: 400 }
-            )
-        }
-
-        const issue = await createIssue({
-            title,
-            description,
-            category,
-            priority,
-            createdBy: user.id,
-            assignedTo,
-            relatedDocType,
-            relatedDocId
-        })
-
-        return NextResponse.json({
-            success: true,
-            data: issue,
-            message: 'Isu berhasil dibuat'
-        }, { status: 201 })
-
-    } catch (error) {
-        console.error('Create issue error:', error)
-        return NextResponse.json(
-            { success: false, error: error instanceof Error ? error.message : 'Gagal membuat isu' },
-            { status: 500 }
-        )
+    if (!title || !description) {
+      return errorResponse('Judul dan deskripsi wajib diisi')
     }
-}
+
+    const issue = await createIssue({
+      title,
+      description,
+      category,
+      priority,
+      createdBy: user.id,
+      assignedTo,
+      relatedDocType,
+      relatedDocId
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: issue,
+      message: 'Isu berhasil dibuat'
+    }, { status: 201 })
+  } catch (error) {
+    console.error('Create issue error:', error)
+    return serverErrorResponse(error instanceof Error ? error.message : 'Gagal membuat isu')
+  }
+})

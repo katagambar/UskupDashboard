@@ -150,6 +150,8 @@ export default function AgendaPage() {
 
   const [searchTerm, setSearchTerm] = useState("")
   const [filterJenis, setFilterJenis] = useState("semua")
+  const [filterStartDate, setFilterStartDate] = useState("")
+  const [filterEndDate, setFilterEndDate] = useState("")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -325,17 +327,53 @@ export default function AgendaPage() {
     const matchesSearch = item.judul.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.lokasi.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesFilter = filterJenis === "semua" || item.jenis === filterJenis
-    return matchesSearch && matchesFilter
+    
+    // Date range filter
+    let matchesDateRange = true
+    if (filterStartDate || filterEndDate) {
+      const itemDate = new Date(item.tanggal)
+      const itemEndDate = item.tanggalAkhir ? new Date(item.tanggalAkhir) : itemDate
+      
+      if (filterStartDate) {
+        const startFilter = new Date(filterStartDate)
+        // Agenda ends before filter start = exclude
+        if (itemEndDate < startFilter) matchesDateRange = false
+      }
+      if (filterEndDate) {
+        const endFilter = new Date(filterEndDate)
+        // Agenda starts after filter end = exclude
+        if (itemDate > endFilter) matchesDateRange = false
+      }
+    }
+    
+    return matchesSearch && matchesFilter && matchesDateRange
   })
 
   const handleSyncGoogleCalendar = async () => {
     setIsSyncing(true)
-    // Simulate Google Calendar sync
-    setTimeout(() => {
+    try {
+      // Call bulk sync API
+      const response = await fetch('/api/google-calendar/sync', {
+        method: 'GET',
+        credentials: 'include',
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        showSuccess(result.message || "Google Calendar berhasil disinkronkan")
+        if (result.synced > 0) {
+          refetch() // Refresh agenda list to show updated googleCalendarId
+        }
+      } else {
+        showError(result.error || "Gagal sync ke Google Calendar")
+      }
+    } catch (error: any) {
+      showError(error.message || "Terjadi kesalahan saat sync")
+    } finally {
       setIsSyncing(false)
-      showSuccess("Google Calendar berhasil disinkronkan")
-    }, 2000)
+    }
   }
+
 
   const handleCreate = async () => {
     if (!formData.judul || !formData.tanggal || !formData.waktu || !formData.lokasi || !formData.jenis || !formData.peserta) {
@@ -683,9 +721,9 @@ export default function AgendaPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Agenda Pertemuan</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Agenda Kegiatan</h1>
             <p className="text-muted-foreground">
-              Kelola agenda pertemuan dan sinkronisasi dengan Google Calendar
+              Pengelolaan Agenda Kegiatan Keuskupan
             </p>
           </div>
           <div className="flex gap-2">
@@ -855,8 +893,8 @@ export default function AgendaPage() {
                 <CardTitle>Filter dan Pencarian</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-4 items-center">
-                  <div className="relative flex-1">
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div className="relative flex-1 min-w-[200px]">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Cari agenda..."
@@ -876,6 +914,39 @@ export default function AgendaPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <div className="flex gap-2 items-end">
+                    <div className="grid gap-1">
+                      <Label className="text-xs text-muted-foreground">Dari Tanggal</Label>
+                      <Input
+                        type="date"
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        className="w-[150px]"
+                      />
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-xs text-muted-foreground">Sampai Tanggal</Label>
+                      <Input
+                        type="date"
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        className="w-[150px]"
+                      />
+                    </div>
+                    {(filterStartDate || filterEndDate) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setFilterStartDate("")
+                          setFilterEndDate("")
+                        }}
+                        className="text-xs"
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1193,6 +1264,45 @@ export default function AgendaPage() {
                   />
                 </div>
               </div>
+              
+              {/* Multi-day toggle for Edit */}
+              <div className="flex items-center space-x-2 py-2">
+                <Switch 
+                  id="edit-multi-day"
+                  checked={formData.isMultiDay}
+                  onCheckedChange={(checked) => setFormData({
+                    ...formData, 
+                    isMultiDay: checked,
+                    tanggalAkhir: checked ? formData.tanggalAkhir : ""
+                  })}
+                />
+                <Label htmlFor="edit-multi-day">Agenda lebih dari 1 hari</Label>
+              </div>
+              
+              {/* Conditional End Date/Time fields for Edit */}
+              {formData.isMultiDay && (
+                <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border border-dashed">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-tanggalAkhir">Tanggal Selesai *</Label>
+                    <Input
+                      id="edit-tanggalAkhir"
+                      type="date"
+                      value={formData.tanggalAkhir}
+                      min={formData.tanggal}
+                      onChange={(e) => setFormData({ ...formData, tanggalAkhir: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-waktuAkhir">Waktu Selesai</Label>
+                    <Input
+                      id="edit-waktuAkhir"
+                      type="time"
+                      value={formData.waktuAkhir}
+                      onChange={(e) => setFormData({ ...formData, waktuAkhir: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="edit-lokasi">Lokasi *</Label>
                 <Input

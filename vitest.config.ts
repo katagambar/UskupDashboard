@@ -7,6 +7,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/e2e/**',           // E2E uses Playwright, not vitest
+      '**/test.disabled/**', // Disabled legacy tests
+    ],
+
     css: true,
     coverage: {
       provider: 'v8',
